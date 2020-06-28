@@ -3,6 +3,9 @@
     #include <stdio.h>
     #include <stdlib.h>
 	#include <string.h>
+	#ifndef YYSTYPE
+    	# define YYSTYPE char*
+	#endif
     extern int yylex();
     extern int yyparse();
 	extern FILE *yyin;
@@ -501,10 +504,10 @@ selection_statement
 iteration_statement
 	: WHILE '(' expression ')' statement
 	| DO statement WHILE '(' expression ')' ';'
-	| FOR '(' expression_statement expression_statement ')' statement
-	| FOR '(' expression_statement expression_statement expression ')' statement
-	| FOR '(' declaration expression_statement ')' statement
-	| FOR '(' declaration expression_statement expression ')' statement
+	| FOR '(' expression_statement expression_statement ')' statement	{printf("%s",$1);}
+	| FOR '(' expression_statement expression_statement expression ')' statement	{printf("%s",$1);}
+	| FOR '(' declaration expression_statement ')' statement	{printf("%s",$1);}
+	| FOR '(' declaration expression_statement expression ')' statement	{printf("%s",$1);}
 	;
 
 jump_statement

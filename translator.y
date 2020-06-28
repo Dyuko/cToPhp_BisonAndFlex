@@ -6,6 +6,7 @@
     extern int yylex();
     extern int yyparse();
 	extern FILE *yyin;
+	extern FILE *yyout;
     void yyerror(const char* s);
 %}
 %token	IDENTIFIER I_CONSTANT F_CONSTANT STRING_LITERAL FUNC_NAME SIZEOF
@@ -535,7 +536,30 @@ declaration_list
 	;
 
 %%
-#include <stdio.h>
+int main(int argc,char **argv)
+{
+	if(argc != 3)	//La cantidad de parámetros debe ser tres
+	{
+		printf("Parámetros incorrectos.");
+	}
+	char* archivo_c = argv[1];		//Path al archivo c 
+	char* archivo_php = argv[2];	//Path al archivo php
+
+	if ((yyin = fopen(archivo_c, "r")) == NULL)	//Establecer archivo c como archivo de entrada
+	{
+		printf("Error al abrir el archivo de lectura %s", archivo_c);
+		return 1;
+	}
+	if ((yyout = fopen(archivo_php, "w")) == NULL)	//Establecer archivo php como archivo de salida
+	{
+		printf("Error al abrir el archivo de escritura %s", archivo_c);
+		return 1;
+	}
+	yyparse();
+	
+	fclose(yyin);		//Cerrar archivo de entrada
+	fclose(yyout);	//Cerrar archivo de salida
+}
 
 void yyerror(const char *s)
 {

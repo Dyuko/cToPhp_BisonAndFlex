@@ -5,12 +5,11 @@ CC = gcc
 all: $(SRCS)
 	$(CC) $(SRCS) -lfl -o translator
 
-# to regenerate the lexer, we call `flex` on it, which will
-# create the flex translator.tab.c and translator.tab.h files
-lexer.c: translator.l translator.tab.h
+flex lex.yy.c: translator.l translator.tab.h translator.tab.c
 	flex translator.l
 
-# to regenerate the parser, we call `bison` on it, which will
-# create the translator.tab.c and translator.tab.h files
-parser.c: translator.y translator.l 
+translator.tab.c translator.tab.h: translator.y translator.l 
 	bison -d translator.y
+
+clean:
+	rm -f translator translator.tab.c translator.tab.h lex.yy.c 

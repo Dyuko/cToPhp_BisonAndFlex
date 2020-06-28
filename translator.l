@@ -1,10 +1,3 @@
-%e  1019
-%p  2807
-%n  371
-%k  284
-%a  1213
-%o  1117
-
 O   [0-7]
 D   [0-9]
 NZ  [1-9]
@@ -36,8 +29,8 @@ static int check_type(void);
 %}
 
 %%
-"/*"                                    { comment(); }
-"//".*                                    { /* consume //-comment */ }
+"/*"                    { comment(); }
+"//".*                  { /* consume //-comment */ }
 
 "auto"					{ return(AUTO); }
 "break"					{ return(BREAK); }
@@ -73,30 +66,30 @@ static int check_type(void);
 "void"					{ return(VOID); }
 "volatile"				{ return(VOLATILE); }
 "while"					{ return(WHILE); }
-"_Alignas"                              { return ALIGNAS; }
-"_Alignof"                              { return ALIGNOF; }
-"_Atomic"                               { return ATOMIC; }
-"_Bool"                                 { return BOOL; }
-"_Complex"                              { return COMPLEX; }
-"_Generic"                              { return GENERIC; }
-"_Imaginary"                            { return IMAGINARY; }
-"_Noreturn"                             { return NORETURN; }
-"_Static_assert"                        { return STATIC_ASSERT; }
-"_Thread_local"                         { return THREAD_LOCAL; }
-"__func__"                              { return FUNC_NAME; }
+"_Alignas"              { return ALIGNAS; }
+"_Alignof"              { return ALIGNOF; }
+"_Atomic"               { return ATOMIC; }
+"_Bool"                 { return BOOL; }
+"_Complex"              { return COMPLEX; }
+"_Generic"              { return GENERIC; }
+"_Imaginary"            { return IMAGINARY; }
+"_Noreturn"             { return NORETURN; }
+"_Static_assert"        { return STATIC_ASSERT; }
+"_Thread_local"         { return THREAD_LOCAL; }
+"__func__"              { return FUNC_NAME; }
 
 {L}{A}*					{ return check_type(); }
 
 {HP}{H}+{IS}?				{ return I_CONSTANT; }
 {NZ}{D}*{IS}?				{ return I_CONSTANT; }
 "0"{O}*{IS}?				{ return I_CONSTANT; }
-{CP}?"'"([^'\\\n]|{ES})+"'"		{ return I_CONSTANT; }
+{CP}?"'"([^'\\\n]|{ES})+"'"	{ return I_CONSTANT; }
 
 {D}+{E}{FS}?				{ return F_CONSTANT; }
-{D}*"."{D}+{E}?{FS}?			{ return F_CONSTANT; }
+{D}*"."{D}+{E}?{FS}?		{ return F_CONSTANT; }
 {D}+"."{E}?{FS}?			{ return F_CONSTANT; }
 {HP}{H}+{P}{FS}?			{ return F_CONSTANT; }
-{HP}{H}*"."{H}+{P}{FS}?			{ return F_CONSTANT; }
+{HP}{H}*"."{H}+{P}{FS}?		{ return F_CONSTANT; }
 {HP}{H}+"."{P}{FS}?			{ return F_CONSTANT; }
 
 ({SP}?\"([^"\\\n]|{ES})*\"{WS}*)+	{ return STRING_LITERAL; }
@@ -123,33 +116,33 @@ static int check_type(void);
 ">="					{ return GE_OP; }
 "=="					{ return EQ_OP; }
 "!="					{ return NE_OP; }
-";"					{ return ';'; }
+";"					    { return ';'; }
 ("{"|"<%")				{ return '{'; }
 ("}"|"%>")				{ return '}'; }
-","					{ return ','; }
-":"					{ return ':'; }
-"="					{ return '='; }
-"("					{ return '('; }
-")"					{ return ')'; }
+","					    { return ','; }
+":"					    { return ':'; }
+"="					    { return '='; }
+"("					    { return '('; }
+")"					    { return ')'; }
 ("["|"<:")				{ return '['; }
 ("]"|":>")				{ return ']'; }
-"."					{ return '.'; }
-"&"					{ return '&'; }
-"!"					{ return '!'; }
-"~"					{ return '~'; }
-"-"					{ return '-'; }
-"+"					{ return '+'; }
-"*"					{ return '*'; }
-"/"					{ return '/'; }
-"%"					{ return '%'; }
-"<"					{ return '<'; }
-">"					{ return '>'; }
-"^"					{ return '^'; }
-"|"					{ return '|'; }
-"?"					{ return '?'; }
+"."					    { return '.'; }
+"&"					    { return '&'; }
+"!"					    { return '!'; }
+"~"					    { return '~'; }
+"-"					    { return '-'; }
+"+"					    { return '+'; }
+"*"					    { return '*'; }
+"/"					    { return '/'; }
+"%"					    { return '%'; }
+"<"					    { return '<'; }
+">"					    { return '>'; }
+"^"					    { return '^'; }
+"|"					    { return '|'; }
+"?"					    { return '?'; }
 
 {WS}+					{ /* whitespace separates tokens */ }
-.					{ /* discard bad characters */ }
+.					    { /* discard bad characters */ }
 
 %%
 

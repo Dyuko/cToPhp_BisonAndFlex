@@ -504,10 +504,14 @@ selection_statement
 iteration_statement
 	: WHILE '(' expression ')' statement
 	| DO statement WHILE '(' expression ')' ';'
-	| FOR '(' expression_statement expression_statement ')' statement
-	| FOR '(' expression_statement expression_statement expression ')' statement
-	| FOR '(' declaration expression_statement ')' statement
-	| FOR '(' declaration expression_statement expression ')' statement
+	| FOR { fprintf(yyout, "for"); } '(' { fprintf(yyout, "( "); } for_resto
+	;
+
+for_resto
+	: expression_statement expression_statement ')' { fprintf(yyout, " )"); } statement
+	| expression_statement expression_statement expression ')' { fprintf(yyout, " )"); } statement
+	| declaration expression_statement ')' { fprintf(yyout, " )"); } statement
+	| declaration expression_statement expression ')' { fprintf(yyout, " )"); } statement
 	;
 
 jump_statement

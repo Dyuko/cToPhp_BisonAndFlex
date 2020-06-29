@@ -6,11 +6,22 @@
 	#ifndef YYSTYPE
     	# define YYSTYPE char*
 	#endif
+	#define TRUE 1
+	#define FALSE 0
     extern int yylex();
     extern int yyparse();
 	extern FILE *yyin;
 	extern FILE *yyout;
     void yyerror(const char* s);
+
+	//Una estructura que representa un conjunto de banderas de estados
+	struct bandera_estado
+	{
+		int funcion_declarada;
+	};
+
+	struct bandera_estado bandera_estado;
+
 %}
 %token	IDENTIFIER I_CONSTANT F_CONSTANT STRING_LITERAL FUNC_NAME SIZEOF
 %token	PTR_OP INC_OP DEC_OP LEFT_OP RIGHT_OP LE_OP GE_OP EQ_OP NE_OP
@@ -33,17 +44,27 @@
 %%
 
 primary_expression
-	: IDENTIFIER
+	: IDENTIFIER	{
+						if(bandera_estado.funcion_declarada == TRUE)
+						{
+							fprintf(yyout, "%s", $1);
+							bandera_estado.funcion_declarada = FALSE;
+						}
+						else
+						{
+							fprintf(yyout, "$%s", $1);
+						}
+					}
 	| constant
 	| string
-	| '(' expression ')'
+	| '(' { fprintf(yyout, "( "); } expression ')' { fprintf(yyout, " )"); }
 	| generic_selection
 	;
 
 constant
-	: I_CONSTANT		/* includes character_constant */
-	| F_CONSTANT
-	| ENUMERATION_CONSTANT	/* after it has been defined as such */
+	: I_CONSTANT {fprintf(yyout, "%s", $1);}		/* includes character_constant */
+	| F_CONSTANT {fprintf(yyout, "%s", $1);}
+	| ENUMERATION_CONSTANT {fprintf(yyout, "%s", $1);}	/* after it has been defined as such */
 	;
 
 enumeration_constant		/* before it has been defined as such */
@@ -51,8 +72,8 @@ enumeration_constant		/* before it has been defined as such */
 	;
 
 string
-	: STRING_LITERAL
-	| FUNC_NAME
+	: STRING_LITERAL {fprintf(yyout, "%s", $1);}
+	| FUNC_NAME {fprintf(yyout, "%s", $1);}
 	;
 
 generic_selection
@@ -84,13 +105,13 @@ postfix_expression
 
 argument_expression_list
 	: assignment_expression
-	| argument_expression_list ',' assignment_expression
+	| argument_expression_list ',' { fprintf(yyout, ", "); } assignment_expression
 	;
 
 unary_expression
 	: postfix_expression
-	| INC_OP unary_expression
-	| DEC_OP unary_expression
+	| INC_OP { fprintf(yyout, $1); } unary_expression
+	| DEC_OP { fprintf(yyout, $1); } unary_expression
 	| unary_operator cast_expression
 	| SIZEOF unary_expression
 	| SIZEOF '(' type_name ')'
@@ -98,12 +119,12 @@ unary_expression
 	;
 
 unary_operator
-	: '&'
-	| '*'
-	| '+'
-	| '-'
-	| '~'
-	| '!'
+	: '&' { fprintf(yyout, "&"); }
+	| '*' { fprintf(yyout, "*"); }
+	| '+' { fprintf(yyout, "+"); }
+	| '-' { fprintf(yyout, "-"); }
+	| '~' { fprintf(yyout, "~"); }
+	| '!' { fprintf(yyout, "!"); }
 	;
 
 cast_expression
@@ -113,65 +134,65 @@ cast_expression
 
 multiplicative_expression
 	: cast_expression
-	| multiplicative_expression '*' cast_expression
-	| multiplicative_expression '/' cast_expression
-	| multiplicative_expression '%' cast_expression
+	| multiplicative_expression '*' { fprintf(yyout, " * "); } cast_expression
+	| multiplicative_expression '/' { fprintf(yyout, " / "); } cast_expression
+	| multiplicative_expression '%' { fprintf(yyout, " %% "); } cast_expression
 	;
 
 additive_expression
 	: multiplicative_expression
-	| additive_expression '+' multiplicative_expression
-	| additive_expression '-' multiplicative_expression
+	| additive_expression '+' { fprintf(yyout, " + "); } multiplicative_expression
+	| additive_expression '-' { fprintf(yyout, " - "); } multiplicative_expression
 	;
 
 shift_expression
 	: additive_expression
-	| shift_expression LEFT_OP additive_expression
-	| shift_expression RIGHT_OP additive_expression
+	| shift_expression LEFT_OP { fprintf(yyout, " << "); } additive_expression
+	| shift_expression RIGHT_OP { fprintf(yyout, " >> "); } additive_expression
 	;
 
 relational_expression
 	: shift_expression
-	| relational_expression '<' shift_expression
-	| relational_expression '>' shift_expression
-	| relational_expression LE_OP shift_expression
-	| relational_expression GE_OP shift_expression
+	| relational_expression '<' { fprintf(yyout, " < "); } shift_expression
+	| relational_expression '>' { fprintf(yyout, " > "); } shift_expression
+	| relational_expression LE_OP { fprintf(yyout, " <= "); } shift_expression
+	| relational_expression GE_OP { fprintf(yyout, " >= "); } shift_expression
 	;
 
 equality_expression
 	: relational_expression
-	| equality_expression EQ_OP relational_expression
-	| equality_expression NE_OP relational_expression
+	| equality_expression EQ_OP { fprintf(yyout, " == "); } relational_expression
+	| equality_expression NE_OP { fprintf(yyout, " != "); } relational_expression
 	;
 
 and_expression
 	: equality_expression
-	| and_expression '&' equality_expression
+	| and_expression '&' { fprintf(yyout, " & "); } equality_expression
 	;
 
 exclusive_or_expression
 	: and_expression
-	| exclusive_or_expression '^' and_expression
+	| exclusive_or_expression '^' { fprintf(yyout, " ^ "); } and_expression
 	;
 
 inclusive_or_expression
 	: exclusive_or_expression
-	| inclusive_or_expression '|' exclusive_or_expression
+	| inclusive_or_expression '|' { fprintf(yyout, " | "); } exclusive_or_expression
 	;
 
 logical_and_expression
 	: inclusive_or_expression
-	| logical_and_expression AND_OP inclusive_or_expression
+	| logical_and_expression AND_OP { fprintf(yyout, " && "); } inclusive_or_expression
 	;
 
 logical_or_expression
 	: logical_and_expression
-	| logical_or_expression OR_OP logical_and_expression
+	| logical_or_expression OR_OP { fprintf(yyout, " || "); } logical_and_expression
 	;
 
 conditional_expression
 	: logical_or_expression
-	| logical_or_expression '?' expression ':' conditional_expression
+	| logical_or_expression '?' { fprintf(yyout, " ? "); } expression ':' { fprintf(yyout, " : "); } conditional_expression
 	;
 
 assignment_expression
@@ -180,22 +201,22 @@ assignment_expression
 	;
 
 assignment_operator
-	: '='
-	| MUL_ASSIGN
-	| DIV_ASSIGN
-	| MOD_ASSIGN
-	| ADD_ASSIGN
-	| SUB_ASSIGN
-	| LEFT_ASSIGN
-	| RIGHT_ASSIGN
-	| AND_ASSIGN
-	| XOR_ASSIGN
-	| OR_ASSIGN
+	: '=' { fprintf(yyout, " = "); }
+	| MUL_ASSIGN { fprintf(yyout, " *= "); }
+	| DIV_ASSIGN { fprintf(yyout, " /= "); }
+	| MOD_ASSIGN { fprintf(yyout, " %%= "); }
+	| ADD_ASSIGN { fprintf(yyout, " += "); }
+	| SUB_ASSIGN { fprintf(yyout, " -= "); }
+	| LEFT_ASSIGN { fprintf(yyout, " <<= "); }
+	| RIGHT_ASSIGN { fprintf(yyout, " >>= "); }
+	| AND_ASSIGN { fprintf(yyout, " &= "); }
+	| XOR_ASSIGN { fprintf(yyout, " ^= "); }
+	| OR_ASSIGN { fprintf(yyout, " |= "); }
 	;
 
 expression
 	: assignment_expression
-	| expression ',' assignment_expression
+	| expression ',' { fprintf(yyout, ", "); } assignment_expression
 	;
 
 constant_expression
@@ -203,8 +224,8 @@ constant_expression
 	;
 
 declaration
-	: declaration_specifiers ';'
-	| declaration_specifiers init_declarator_list ';'
+	: declaration_specifiers ';' {fprintf(yyout, ";\n");}
+	| declaration_specifiers init_declarator_list ';' {fprintf(yyout, ";\n");}
 	| static_assert_declaration
 	;
 
@@ -223,11 +244,11 @@ declaration_specifiers
 
 init_declarator_list
 	: init_declarator
-	| init_declarator_list ',' init_declarator
+	| init_declarator_list ',' { fprintf(yyout, ";\n"); } init_declarator
 	;
 
 init_declarator
-	: declarator '=' initializer
+	: declarator '=' {fprintf(yyout, "=");} initializer
 	| declarator
 	;
 
@@ -344,7 +365,19 @@ declarator
 	;
 
 direct_declarator
-	: IDENTIFIER
+	: IDENTIFIER	{ 
+						if(bandera_estado.funcion_declarada == TRUE)
+						{
+							fprintf(yyout, "function %s", $1);
+							bandera_estado.funcion_declarada = FALSE;
+						}
+						else
+						{
+							fprintf(yyout, "$%s", $1);
+						}
+
+					}
+
 	| '(' declarator ')'
 	| direct_declarator '[' ']'
 	| direct_declarator '[' '*' ']'

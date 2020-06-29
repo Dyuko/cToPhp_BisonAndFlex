@@ -470,14 +470,14 @@ statement
 	;
 
 labeled_statement
-	: IDENTIFIER ':' statement
-	| CASE constant_expression ':' statement
-	| DEFAULT ':' statement
+	: IDENTIFIER { fprintf(yyout, $1); } ':' { fprintf(yyout, ": "); } statement
+	| CASE { fprintf(yyout, "case "); } constant_expression ':' { fprintf(yyout, ": "); } statement
+	| DEFAULT { fprintf(yyout, "default "); } ':' { fprintf(yyout, ": "); } statement
 	;
 
 compound_statement
-	: '{' '}'
-	| '{'  block_item_list '}'
+	: '{' { fprintf(yyout, "{ "); } '}' { fprintf(yyout, " }\n"); }
+	| '{' { fprintf(yyout, "{\n"); } block_item_list '}' { fprintf(yyout, "}\n"); }
 	;
 
 block_item_list
@@ -491,8 +491,8 @@ block_item
 	;
 
 expression_statement
-	: ';'
-	| expression ';'
+	: ';' { fprintf(yyout, ";\n"); }
+	| expression ';' { fprintf(yyout, ";\n"); }
 	;
 
 selection_statement
@@ -504,18 +504,18 @@ selection_statement
 iteration_statement
 	: WHILE '(' expression ')' statement
 	| DO statement WHILE '(' expression ')' ';'
-	| FOR '(' expression_statement expression_statement ')' statement	{printf("%s",$1);}
-	| FOR '(' expression_statement expression_statement expression ')' statement	{printf("%s",$1);}
-	| FOR '(' declaration expression_statement ')' statement	{printf("%s",$1);}
-	| FOR '(' declaration expression_statement expression ')' statement	{printf("%s",$1);}
+	| FOR '(' expression_statement expression_statement ')' statement
+	| FOR '(' expression_statement expression_statement expression ')' statement
+	| FOR '(' declaration expression_statement ')' statement
+	| FOR '(' declaration expression_statement expression ')' statement
 	;
 
 jump_statement
 	: GOTO IDENTIFIER ';'
-	| CONTINUE ';'
-	| BREAK ';'
-	| RETURN ';'
-	| RETURN expression ';'
+	| CONTINUE ';'				{fprintf(yyout,"continue;\n");}
+	| BREAK ';'					{fprintf(yyout,"break;\n");}
+	| RETURN ';'				{fprintf(yyout,"return;\n");}
+	| RETURN {fprintf(yyout,"return ");} expression ';'	{fprintf(yyout,";\n");}
 	;
 
 translation_unit

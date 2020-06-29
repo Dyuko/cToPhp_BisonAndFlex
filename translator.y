@@ -322,10 +322,10 @@ atomic_type_specifier
 	;
 
 type_qualifier
-	: CONST
-	| RESTRICT
-	| VOLATILE
-	| ATOMIC
+	: CONST { fprintf(yyout, "const "); }
+	| RESTRICT { fprintf(yyout, "restrict "); } 
+	| VOLATILE { fprintf(yyout, "volatile "); }
+	| ATOMIC { fprintf(yyout, "atomic "); }
 	;
 
 function_specifier
@@ -496,9 +496,13 @@ expression_statement
 	;
 
 selection_statement
-	: IF '(' expression ')' statement ELSE statement
-	| IF '(' expression ')' statement
-	| SWITCH '(' expression ')' statement
+	: IF { fprintf(yyout, "if"); } '(' { fprintf(yyout, "( "); } expression ')' { fprintf(yyout, " )"); } statement if_resto
+	| SWITCH { fprintf(yyout, "switch"); } '(' { fprintf(yyout, "( "); } expression ')' { fprintf(yyout, " )"); } statement
+	;
+
+if_resto
+	: ELSE { fprintf(yyout, "else"); } statement
+	| 
 	;
 
 iteration_statement

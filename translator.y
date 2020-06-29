@@ -380,7 +380,7 @@ parameter_type_list
 
 parameter_list
 	: parameter_declaration
-	| parameter_list ',' parameter_declaration
+	| parameter_list ',' { fprintf(yyout, ", "); } parameter_declaration
 	;
 
 parameter_declaration
@@ -438,8 +438,12 @@ initializer
 initializer_list
 	: designation initializer
 	| initializer
-	| initializer_list ',' designation initializer
-	| initializer_list ',' initializer
+	| initializer_list ',' { fprintf(yyout, " ,"); } initializer_list_resto
+	;
+
+initializer_list_resto
+	: designation initializer
+	| initializer
 	;
 
 designation

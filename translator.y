@@ -375,7 +375,6 @@ direct_declarator
 						{
 							fprintf(yyout, "$%s", $1);
 						}
-
 					}
 
 	| '(' declarator ')'
@@ -388,9 +387,9 @@ direct_declarator
 	| direct_declarator '[' type_qualifier_list assignment_expression ']'
 	| direct_declarator '[' type_qualifier_list ']'
 	| direct_declarator '[' assignment_expression ']'
-	| direct_declarator '(' parameter_type_list ')'
-	| direct_declarator '(' ')'
-	| direct_declarator '(' identifier_list ')'
+	| direct_declarator '(' { fprintf(yyout, "( "); } parameter_type_list ')' { fprintf(yyout, " )"); }
+	| direct_declarator '(' { fprintf(yyout, "( "); }')' { fprintf(yyout, " )"); }
+	| direct_declarator '(' { fprintf(yyout, "( "); } identifier_list ')' { fprintf(yyout, " )"); }
 	;
 
 pointer

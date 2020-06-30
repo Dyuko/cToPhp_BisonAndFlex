@@ -35,7 +35,7 @@
 	};
 
 	// Declaro e inicializo explícitamente para evitar problemas
-	struct bandera_estado bandera_estado = {FALSE, FALSE, FALSE, FALSE, FALSE, TRUE};	
+	struct bandera_estado bandera_estado = {FALSE, FALSE, FALSE, FALSE, FALSE, FALSE};	
 
 %}
 %token	IDENTIFIER I_CONSTANT F_CONSTANT STRING_LITERAL FUNC_NAME SIZEOF
@@ -263,6 +263,7 @@ declaration
 	: declaration_specifiers ';' {fprintf(yyout, ";\n"); if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*14*"); }}
 	| declaration_specifiers init_declarator_list ';'	
 				{
+					fprintf(yyout, "$%s", $2);	//Es para declaraciones tipo int global;
 					if(bandera_estado.ignorar_vector_multidimensional == TRUE
 					&& bandera_estado.cerrar_parentesis_array == TRUE)
 					{
@@ -272,7 +273,8 @@ declaration
 					}
 					else
 						fprintf(yyout, ";\n");
-					if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*15*"); }
+					if(bandera_estado.debug_mode == TRUE)  
+						fprintf(yyout, "*15*"); 
 				}														
 	| static_assert_declaration
 	;
@@ -291,13 +293,17 @@ declaration_specifiers
 	;
 
 init_declarator_list
-	: init_declarator
+	: init_declarator	{
+							$$=$1;	//Atributo sintetizado
+						}
 	| init_declarator_list ',' { fprintf(yyout, ";\n"); if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*16*"); }} init_declarator
 	;
 
 init_declarator
 	: declarator '=' {if(bandera_estado.cerrar_parentesis_array == TRUE) fprintf(yyout, "=");if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*17*"); }} initializer
-	| declarator
+	| declarator	{
+						$$=$1;	//Atributo sintetizado
+					}
 	;
 
 storage_class_specifier
@@ -409,21 +415,16 @@ alignment_specifier
 
 declarator
 	: pointer direct_declarator
-	| direct_declarator
+	| direct_declarator	{
+							$$ = $1;	//Atributo sintetizado necesario
+						}
 	;
 
 direct_declarator
 	: IDENTIFIER	{ 
-						if(bandera_estado.funcion_declarada == TRUE)
-						{
-							fprintf(yyout, "function %s", $1);
-							bandera_estado.funcion_declarada = FALSE;
-						}
-						else
-						{
-							fprintf(yyout, "$%s", $1);
-						}
-						if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*18*"); }
+						$$ = $1;	//Atributo sintetizado necesario
+						if(bandera_estado.debug_mode == TRUE)	//Ayuda para debuggear
+							fprintf(yyout, "*18*"); 
 					}
 
 	| '(' declarator ')'
@@ -439,7 +440,10 @@ direct_declarator
 	| direct_declarator '[' { bandera_estado.ignorar_dimension_vector = TRUE; if (bandera_estado.ignorar_vector_multidimensional == FALSE) fprintf(yyout, "=array( "); bandera_estado.ignorar_vector_multidimensional = TRUE; }
 	assignment_expression ']' { bandera_estado.cerrar_parentesis_array = TRUE; if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*20*"); }}
 	| direct_declarator '(' { fprintf(yyout, "( "); } parameter_type_list ')' { fprintf(yyout, " )"); if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*21*"); }}
-	| direct_declarator '(' { fprintf(yyout, "( "); }')' { fprintf(yyout, " )"); if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*22*"); }}
+	| direct_declarator '(' ')' {
+									fprintf(yyout, "function %s ()", $1);
+									if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*22*"); }
+								}
 	| direct_declarator '(' { fprintf(yyout, "( "); } identifier_list ')' { fprintf(yyout, " )"); if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*23*"); }}
 	;
 

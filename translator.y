@@ -21,6 +21,8 @@
 	* ignorar_vector_multidimensional: Si se detecta un vector multidimensional en c, debo evitar imprimir array() array() en php
 	* error_detectado: Si se ha detectado un error
 	* variable_global_detectada: Si se ha detectado una variable global declarada en c
+
+	* debug_mode: Utilizado para debuggear, habilita la impresión de identificadores en las reglas semánticas 
 	*/
 	struct bandera_estado
 	{
@@ -29,10 +31,11 @@
 		int ignorar_vector_multidimensional;
 		int error_detectado;
 		int cerrar_parentesis_array;
+		int debug_mode;
 	};
 
 	// Declaro e inicializo explícitamente para evitar problemas
-	struct bandera_estado bandera_estado = {FALSE, FALSE, FALSE, FALSE, FALSE};	
+	struct bandera_estado bandera_estado = {FALSE, FALSE, FALSE, FALSE, FALSE, TRUE};	
 
 %}
 %token	IDENTIFIER I_CONSTANT F_CONSTANT STRING_LITERAL FUNC_NAME SIZEOF
@@ -54,8 +57,8 @@
 
 %start translation_unit
 %%
-
 primary_expression
+	//Variables dentro del for se detectan aquí
 	: IDENTIFIER{
 		 			if (bandera_estado.funcion_declarada == TRUE)
 					{ 
@@ -66,10 +69,11 @@ primary_expression
 					{ 
 						fprintf(yyout, "$%s", $1);
 					} 
+					if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*1*"); }
 				} 
 	| constant
 	| string
-	| '(' { fprintf(yyout, "( "); } expression ')' { fprintf(yyout, " )"); }
+	| '(' { fprintf(yyout, "( "); } expression ')' { fprintf(yyout, " )"); if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*2*"); }}
 	| generic_selection
 	;
 
@@ -80,12 +84,14 @@ constant
 							bandera_estado.ignorar_dimension_vector = FALSE; //dejo de ignorar
 						else
 							fprintf(yyout, "%s", $1);
+						if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*3*"); }
 					}		
 	| F_CONSTANT 	{
 						if (bandera_estado.ignorar_dimension_vector == TRUE)
 							bandera_estado.ignorar_dimension_vector = FALSE; //dejo de ignorar
 						else
 							fprintf(yyout, "%s", $1);
+						if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*4*"); }
 					}	
 	| ENUMERATION_CONSTANT 
 					{
@@ -93,6 +99,7 @@ constant
 							bandera_estado.ignorar_dimension_vector = FALSE; //dejo de ignorar
 						else
 							fprintf(yyout, "%s", $1);
+						if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*5*"); }
 					}	
 	;
 
@@ -101,8 +108,8 @@ enumeration_constant		/* before it has been defined as such */
 	;
 
 string
-	: STRING_LITERAL {fprintf(yyout, "%s", $1);}
-	| FUNC_NAME {fprintf(yyout, "%s", $1);}
+	: STRING_LITERAL {fprintf(yyout, "%s", $1); if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*61*"); }}
+	| FUNC_NAME {fprintf(yyout, "%s", $1); if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*7*"); }}
 	;
 
 generic_selection
@@ -121,13 +128,13 @@ generic_association
 
 postfix_expression
 	: primary_expression
-	| postfix_expression '[' { fprintf(yyout, "[ "); } expression ']' { fprintf(yyout, " ]"); }
-	| postfix_expression '(' { fprintf(yyout, "( "); } ')' { fprintf(yyout, " )"); } 
-	| postfix_expression '(' { fprintf(yyout, "( "); } argument_expression_list ')' { fprintf(yyout, " )"); }
+	| postfix_expression '[' { fprintf(yyout, "[ "); } expression ']' { fprintf(yyout, " ]"); if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*8*"); }}
+	| postfix_expression '(' { fprintf(yyout, "( "); } ')' { fprintf(yyout, " )"); if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*9*"); }} 
+	| postfix_expression '(' { fprintf(yyout, "( "); } argument_expression_list ')' { fprintf(yyout, " )"); if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*10*"); }}
 	| postfix_expression '.' IDENTIFIER
 	| postfix_expression PTR_OP IDENTIFIER
-	| postfix_expression INC_OP { fprintf(yyout, "++"); }
-	| postfix_expression DEC_OP { fprintf(yyout, "--"); }
+	| postfix_expression INC_OP { fprintf(yyout, "++"); if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*11*"); }}
+	| postfix_expression DEC_OP { fprintf(yyout, "--"); if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*12*"); }}
 	| '(' type_name ')' '{' initializer_list '}'
 	| '(' type_name ')' '{' initializer_list ',' '}'
 	;
@@ -245,7 +252,7 @@ assignment_operator
 
 expression
 	: assignment_expression
-	| expression ',' { fprintf(yyout, ", "); } assignment_expression
+	| expression ',' { fprintf(yyout, ", "); if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*13*"); }} assignment_expression
 	;
 
 constant_expression
@@ -253,7 +260,7 @@ constant_expression
 	;
 
 declaration
-	: declaration_specifiers ';' {fprintf(yyout, ";\n");}
+	: declaration_specifiers ';' {fprintf(yyout, ";\n"); if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*14*"); }}
 	| declaration_specifiers init_declarator_list ';'	
 				{
 					if(bandera_estado.ignorar_vector_multidimensional == TRUE
@@ -265,6 +272,7 @@ declaration
 					}
 					else
 						fprintf(yyout, ";\n");
+					if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*15*"); }
 				}														
 	| static_assert_declaration
 	;
@@ -284,11 +292,11 @@ declaration_specifiers
 
 init_declarator_list
 	: init_declarator
-	| init_declarator_list ',' { fprintf(yyout, ";\n"); } init_declarator
+	| init_declarator_list ',' { fprintf(yyout, ";\n"); if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*16*"); }} init_declarator
 	;
 
 init_declarator
-	: declarator '=' {if(bandera_estado.cerrar_parentesis_array == TRUE) fprintf(yyout, "=");} initializer
+	: declarator '=' {if(bandera_estado.cerrar_parentesis_array == TRUE) fprintf(yyout, "=");if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*17*"); }} initializer
 	| declarator
 	;
 
@@ -415,11 +423,12 @@ direct_declarator
 						{
 							fprintf(yyout, "$%s", $1);
 						}
+						if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*18*"); }
 					}
 
 	| '(' declarator ')'
 	| direct_declarator '[' { if (bandera_estado.ignorar_vector_multidimensional == FALSE) fprintf(yyout, "=array( "); bandera_estado.ignorar_vector_multidimensional = TRUE; }
-	 ']' { bandera_estado.cerrar_parentesis_array =TRUE; }
+	 ']' { bandera_estado.cerrar_parentesis_array =TRUE; if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*19*"); }}
 	| direct_declarator '[' '*' ']'
 	| direct_declarator '[' STATIC type_qualifier_list assignment_expression ']'
 	| direct_declarator '[' STATIC assignment_expression ']'
@@ -428,10 +437,10 @@ direct_declarator
 	| direct_declarator '[' type_qualifier_list assignment_expression ']'
 	| direct_declarator '[' type_qualifier_list ']'
 	| direct_declarator '[' { bandera_estado.ignorar_dimension_vector = TRUE; if (bandera_estado.ignorar_vector_multidimensional == FALSE) fprintf(yyout, "=array( "); bandera_estado.ignorar_vector_multidimensional = TRUE; }
-	assignment_expression ']' { bandera_estado.cerrar_parentesis_array = TRUE; }
-	| direct_declarator '(' { fprintf(yyout, "( "); } parameter_type_list ')' { fprintf(yyout, " )"); }
-	| direct_declarator '(' { fprintf(yyout, "( "); }')' { fprintf(yyout, " )"); }
-	| direct_declarator '(' { fprintf(yyout, "( "); } identifier_list ')' { fprintf(yyout, " )"); }
+	assignment_expression ']' { bandera_estado.cerrar_parentesis_array = TRUE; if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*20*"); }}
+	| direct_declarator '(' { fprintf(yyout, "( "); } parameter_type_list ')' { fprintf(yyout, " )"); if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*21*"); }}
+	| direct_declarator '(' { fprintf(yyout, "( "); }')' { fprintf(yyout, " )"); if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*22*"); }}
+	| direct_declarator '(' { fprintf(yyout, "( "); } identifier_list ')' { fprintf(yyout, " )"); if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*23*"); }}
 	;
 
 pointer
@@ -548,14 +557,14 @@ statement
 	;
 
 labeled_statement
-	: IDENTIFIER { fprintf(yyout, $1); } ':' { fprintf(yyout, ": "); } statement
-	| CASE { fprintf(yyout, "case "); } constant_expression ':' { fprintf(yyout, ": "); } statement
-	| DEFAULT { fprintf(yyout, "default "); } ':' { fprintf(yyout, ": "); } statement
+	: IDENTIFIER { fprintf(yyout, $1); } ':' { fprintf(yyout, ": "); } statement {if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*24*"); }}
+	| CASE { fprintf(yyout, "case "); } constant_expression ':' { fprintf(yyout, ": "); } statement {if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*25*"); }}
+	| DEFAULT { fprintf(yyout, "default "); } ':' { fprintf(yyout, ": "); } statement {if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*26*"); }}
 	;
 
 compound_statement
-	: '{' { fprintf(yyout, "{ "); } '}' { fprintf(yyout, " }\n"); }
-	| '{' { fprintf(yyout, "{\n"); } block_item_list '}' { fprintf(yyout, "}\n"); }
+	: '{' { fprintf(yyout, "{ "); } '}' { fprintf(yyout, " }\n"); if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*27*"); }}
+	| '{' { fprintf(yyout, "{\n"); } block_item_list '}' { fprintf(yyout, "}\n"); if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*28*"); }}
 	;
 
 block_item_list
@@ -610,13 +619,13 @@ translation_unit
 	;
 
 external_declaration
-	: function_definition {bandera_estado.funcion_declarada = TRUE;}
+	: function_definition {bandera_estado.funcion_declarada = TRUE;if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*29*"); }}
 	| declaration
 	;
-
+//Declaración de una función
 function_definition
-	: declaration_specifiers declarator declaration_list compound_statement
-	| declaration_specifiers declarator compound_statement
+	: declaration_specifiers declarator declaration_list compound_statement {if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*30*"); }}
+	| declaration_specifiers declarator compound_statement { if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*31*"); }}
 	;
 
 declaration_list

@@ -1,12 +1,12 @@
 $funcion( $x );
-$variable_global=0;
+$variable_global0;
 $main(  ){
-$vector10;
-$funcion10;
-$vector0 = 0;
-$variable_global = $vector0;
+$vector=array(  );
+$funcion( 10 );
+$vector[ 0 ] = 0;
+$variable_global = $vector[ 0 ];
 }
-$funcion( $x ){
+function funcion( $x ){
 $i;
 $j;
 for( $i = 0;
@@ -14,6 +14,6 @@ $i < 10;
 ++$i ){
 for( $j = 0;
 $j < 10;
-++$j )$printf"u.u";
+++$j )$printf( "u.u" );
 }
 }

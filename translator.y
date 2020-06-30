@@ -10,17 +10,29 @@
 	#define FALSE 0
     extern int yylex();
     extern int yyparse();
-	extern FILE *yyin;
-	extern FILE *yyout;
+	extern FILE *yyin;	// Puntero al archivo de entrada 
+	extern FILE *yyout;	// Puntero al archivo de salida
     void yyerror(const char* s);
 
-	//Una estructura que representa un conjunto de banderas de estados
+	/* 
+	* Una estructura que representa un conjunto de banderas de estados
+	* funcion_declarada: Si se declara una función en c, en php debo imprimir function 
+	* ignorar_dimension_vector: En c se declara la dimensión del vector, en php lo ignoro
+	* ignorar_vector_multidimensional: Si se detecta un vector multidimensional en c, debo evitar imprimir array() array() en php
+	* error_detectado: Si se ha detectado un error
+	* variable_global_detectada: Si se ha detectado una variable global declarada en c
+	*/
 	struct bandera_estado
 	{
 		int funcion_declarada;
+		int ignorar_dimension_vector;
+		int ignorar_vector_multidimensional;
+		int error_detectado;
+		int cerrar_parentesis_array;
 	};
 
-	struct bandera_estado bandera_estado;
+	// Declaro e inicializo explícitamente para evitar problemas
+	struct bandera_estado bandera_estado = {FALSE, FALSE, FALSE, FALSE, FALSE};	
 
 %}
 %token	IDENTIFIER I_CONSTANT F_CONSTANT STRING_LITERAL FUNC_NAME SIZEOF
@@ -44,27 +56,34 @@
 %%
 
 primary_expression
-	: IDENTIFIER	{
-						if(bandera_estado.funcion_declarada == TRUE)
-						{
-							fprintf(yyout, "%s", $1);
-							bandera_estado.funcion_declarada = FALSE;
-						}
-						else
-						{
-							fprintf(yyout, "$%s", $1);
-						}
-					}
+	: IDENTIFIER { fprintf(yyout, "$%s", $1); }
 	| constant
 	| string
 	| '(' { fprintf(yyout, "( "); } expression ')' { fprintf(yyout, " )"); }
 	| generic_selection
 	;
 
+//Al imprimir una constante debo verificar si esta no es la dimensión de un array, si lo es debo ignorarla
 constant
-	: I_CONSTANT {fprintf(yyout, "%s", $1);}		/* includes character_constant */
-	| F_CONSTANT {fprintf(yyout, "%s", $1);}
-	| ENUMERATION_CONSTANT {fprintf(yyout, "%s", $1);}	/* after it has been defined as such */
+	: I_CONSTANT	{
+						if (bandera_estado.ignorar_dimension_vector == TRUE)
+							bandera_estado.ignorar_dimension_vector = FALSE; //dejo de ignorar
+						else
+							fprintf(yyout, "%s", $1);
+					}		
+	| F_CONSTANT 	{
+						if (bandera_estado.ignorar_dimension_vector == TRUE)
+							bandera_estado.ignorar_dimension_vector = FALSE; //dejo de ignorar
+						else
+							fprintf(yyout, "%s", $1);
+					}	
+	| ENUMERATION_CONSTANT 
+					{
+						if (bandera_estado.ignorar_dimension_vector == TRUE)
+							bandera_estado.ignorar_dimension_vector = FALSE; //dejo de ignorar
+						else
+							fprintf(yyout, "%s", $1);
+					}	
 	;
 
 enumeration_constant		/* before it has been defined as such */
@@ -92,13 +111,13 @@ generic_association
 
 postfix_expression
 	: primary_expression
-	| postfix_expression '[' expression ']'
-	| postfix_expression '(' ')'
-	| postfix_expression '(' argument_expression_list ')'
+	| postfix_expression '[' { fprintf(yyout, "[ "); } expression ']' { fprintf(yyout, " ]"); }
+	| postfix_expression '(' { fprintf(yyout, "( "); } ')' { fprintf(yyout, " )"); } 
+	| postfix_expression '(' { fprintf(yyout, "( "); } argument_expression_list ')' { fprintf(yyout, " )"); }
 	| postfix_expression '.' IDENTIFIER
 	| postfix_expression PTR_OP IDENTIFIER
-	| postfix_expression INC_OP
-	| postfix_expression DEC_OP
+	| postfix_expression INC_OP { fprintf(yyout, "++"); }
+	| postfix_expression DEC_OP { fprintf(yyout, "--"); }
 	| '(' type_name ')' '{' initializer_list '}'
 	| '(' type_name ')' '{' initializer_list ',' '}'
 	;
@@ -110,8 +129,8 @@ argument_expression_list
 
 unary_expression
 	: postfix_expression
-	| INC_OP { fprintf(yyout, $1); } unary_expression
-	| DEC_OP { fprintf(yyout, $1); } unary_expression
+	| INC_OP { fprintf(yyout, "++"); } unary_expression
+	| DEC_OP { fprintf(yyout, "--"); } unary_expression
 	| unary_operator cast_expression
 	| SIZEOF unary_expression
 	| SIZEOF '(' type_name ')'
@@ -225,7 +244,18 @@ constant_expression
 
 declaration
 	: declaration_specifiers ';' {fprintf(yyout, ";\n");}
-	| declaration_specifiers init_declarator_list ';' {fprintf(yyout, ";\n");}
+	| declaration_specifiers init_declarator_list ';'	
+				{
+					if(bandera_estado.ignorar_vector_multidimensional == TRUE
+					&& bandera_estado.cerrar_parentesis_array == TRUE)
+					{
+						fprintf(yyout, " );\n");
+						bandera_estado.ignorar_vector_multidimensional = FALSE;
+						bandera_estado.cerrar_parentesis_array = FALSE;
+					}
+					else
+						fprintf(yyout, ";\n");
+				}														
 	| static_assert_declaration
 	;
 
@@ -248,7 +278,7 @@ init_declarator_list
 	;
 
 init_declarator
-	: declarator '=' {fprintf(yyout, "=");} initializer
+	: declarator '=' {if(bandera_estado.cerrar_parentesis_array == TRUE) fprintf(yyout, "=");} initializer
 	| declarator
 	;
 
@@ -378,7 +408,8 @@ direct_declarator
 					}
 
 	| '(' declarator ')'
-	| direct_declarator '[' ']'
+	| direct_declarator '[' { if (bandera_estado.ignorar_vector_multidimensional == FALSE) fprintf(yyout, "=array( "); bandera_estado.ignorar_vector_multidimensional = TRUE; }
+	 ']' { bandera_estado.cerrar_parentesis_array =TRUE; }
 	| direct_declarator '[' '*' ']'
 	| direct_declarator '[' STATIC type_qualifier_list assignment_expression ']'
 	| direct_declarator '[' STATIC assignment_expression ']'
@@ -386,7 +417,8 @@ direct_declarator
 	| direct_declarator '[' type_qualifier_list STATIC assignment_expression ']'
 	| direct_declarator '[' type_qualifier_list assignment_expression ']'
 	| direct_declarator '[' type_qualifier_list ']'
-	| direct_declarator '[' assignment_expression ']'
+	| direct_declarator '[' { bandera_estado.ignorar_dimension_vector = TRUE; if (bandera_estado.ignorar_vector_multidimensional == FALSE) fprintf(yyout, "=array( "); bandera_estado.ignorar_vector_multidimensional = TRUE; }
+	assignment_expression ']' { bandera_estado.cerrar_parentesis_array = TRUE; }
 	| direct_declarator '(' { fprintf(yyout, "( "); } parameter_type_list ')' { fprintf(yyout, " )"); }
 	| direct_declarator '(' { fprintf(yyout, "( "); }')' { fprintf(yyout, " )"); }
 	| direct_declarator '(' { fprintf(yyout, "( "); } identifier_list ')' { fprintf(yyout, " )"); }
@@ -568,7 +600,7 @@ translation_unit
 	;
 
 external_declaration
-	: function_definition
+	: function_definition {bandera_estado.funcion_declarada = TRUE;}
 	| declaration
 	;
 
@@ -602,8 +634,9 @@ int main(int argc,char **argv)
 		printf("Error al abrir el archivo de escritura %s", archivo_c);
 		return 1;
 	}
+	fprintf(yyout, "<?php\n");
 	yyparse();
-	
+	fprintf(yyout, "?>\n");
 	fclose(yyin);		//Cerrar archivo de entrada
 	fclose(yyout);	//Cerrar archivo de salida
 }

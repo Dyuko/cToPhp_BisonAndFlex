@@ -19,7 +19,6 @@
 	* ignorar_dimension_vector: En c se declara la dimensión del vector, en php lo ignoro
 	* ignorar_vector_multidimensional: Si se detecta un vector multidimensional en c, debo evitar imprimir array() array() en php
 	* error_detectado: Si se ha detectado un error
-	* variable_global_detectada: Si se ha detectado una variable global declarada en c
 
 	* debug_mode: Utilizado para debuggear, habilita la impresión de identificadores en las reglas semánticas 
 	*/

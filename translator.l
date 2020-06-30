@@ -28,7 +28,7 @@ static int check_type(void);
 %}
 
 %%
-^{WS}*#include{WS}+(<([^"'<>]+)>|\"([^"'<>]+)\")    {/*Ignorar directivas #include*/}
+^{WS}*#include{WS}*(<([^"'<>]+)>|\"([^"'<>]+)\")    {/*Ignorar directivas #include*/}
 "/*"                                                { comment(); }
 "//".*                                              { /* consume //-comment */ }
 

@@ -15,8 +15,7 @@
     void yyerror(const char* s);
 
 	/* 
-	* Una estructura que representa un conjunto de banderas de estados
-	* funcion_declarada: Si se declara una función en c, en php debo imprimir function 
+	* Una estructura que representa un conjunto de banderas de estados 
 	* ignorar_dimension_vector: En c se declara la dimensión del vector, en php lo ignoro
 	* ignorar_vector_multidimensional: Si se detecta un vector multidimensional en c, debo evitar imprimir array() array() en php
 	* error_detectado: Si se ha detectado un error
@@ -26,7 +25,6 @@
 	*/
 	struct bandera_estado
 	{
-		int funcion_declarada;
 		int ignorar_dimension_vector;
 		int ignorar_vector_multidimensional;
 		int error_detectado;
@@ -35,7 +33,7 @@
 	};
 
 	// Declaro e inicializo explícitamente para evitar problemas
-	struct bandera_estado bandera_estado = {FALSE, FALSE, FALSE, FALSE, FALSE, FALSE};	
+	struct bandera_estado bandera_estado = {FALSE, FALSE, FALSE, FALSE, TRUE};	
 
 %}
 %token	IDENTIFIER I_CONSTANT F_CONSTANT STRING_LITERAL FUNC_NAME SIZEOF
@@ -60,15 +58,7 @@
 primary_expression
 	//Variables dentro del for se detectan aquí
 	: IDENTIFIER{
-		 			if (bandera_estado.funcion_declarada == TRUE)
-					{ 
-						fprintf(yyout, "function %s", $1); 
-						bandera_estado.funcion_declarada = FALSE;
-					} 
-					else
-					{ 
-						fprintf(yyout, "$%s", $1);
-					} 
+					fprintf(yyout, "$%s", $1);
 					if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*1*"); }
 				} 
 	| constant
@@ -296,7 +286,20 @@ init_declarator_list
 	: init_declarator	{
 							$$=$1;	//Atributo sintetizado
 						}
-	| init_declarator_list ',' { fprintf(yyout, ";\n"); if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*16*"); }} init_declarator
+	//Si tenemos int a, b; Aquí entra a,b 
+	| init_declarator_list ',' init_declarator	{ 
+													//Para guardar el atributo sintetizado de init_declarator_list
+													//Necesito guardar la concatenación de sus atributos con el formato php
+													char* init_declarator_list = NULL;
+													init_declarator_list = malloc((strlen($1)+strlen($3)+5)*sizeof(char));
+													init_declarator_list[0]='\0';
+													strcat(init_declarator_list, $1);
+													strcat(init_declarator_list, ";$");
+													strcat(init_declarator_list, $3);
+													$$ = init_declarator_list;
+													if(bandera_estado.debug_mode == TRUE)
+														fprintf(yyout, "*16*"); 
+												}
 	;
 
 init_declarator
@@ -623,7 +626,7 @@ translation_unit
 	;
 
 external_declaration
-	: function_definition {bandera_estado.funcion_declarada = TRUE;if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*29*"); }}
+	: function_definition {if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*29*"); }}
 	| declaration
 	;
 //Declaración de una función

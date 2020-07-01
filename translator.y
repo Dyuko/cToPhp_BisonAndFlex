@@ -74,8 +74,25 @@ primary_expression
 				} 
 	| constant
 	| string
-	| '(' { fprintf(yyout, "( "); } expression ')' { fprintf(yyout, " )"); if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*2*"); }}
+	| '('	{ 
+				fprintf(yyout, "( "); 
+			}
+	expression_cierre 
 	| generic_selection
+	;
+
+expression_cierre
+	: expression ')'	{ 
+							fprintf(yyout, " )"); 
+							if(bandera_estado.debug_mode == TRUE) 
+								fprintf(yyout, "*2*"); 
+						}
+	//Detección de error
+	| expression error	{
+							printf("Símbolo ')' faltante [expression_cierre]\n");
+							yyerrok;
+							yyclearin;
+						}
 	;
 
 //Al imprimir una constante debo verificar si esta no es la dimensión de un array, si lo es debo ignorarla
@@ -128,16 +145,56 @@ generic_association
 	;
 
 postfix_expression
-	: primary_expression
-	| postfix_expression '[' { fprintf(yyout, "[ "); } expression ']' { fprintf(yyout, " ]"); if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*8*"); }}
-	| postfix_expression '(' { fprintf(yyout, "( "); } ')' { fprintf(yyout, " )"); if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*9*"); }} 
-	| postfix_expression '(' { fprintf(yyout, "( "); } argument_expression_list ')' { fprintf(yyout, " )"); if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*10*"); }}
+	: primary_expression 
+	| postfix_expression '['	{ 
+									fprintf(yyout, "[ "); 
+								}
+	postfix_expression_corchete_cierre 
+	| postfix_expression '(' { fprintf(yyout, "( "); } postfix_expression_parentesis_cierre
 	| postfix_expression '.' IDENTIFIER
 	| postfix_expression PTR_OP IDENTIFIER
 	| postfix_expression INC_OP { fprintf(yyout, "++"); if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*11*"); }}
 	| postfix_expression DEC_OP { fprintf(yyout, "--"); if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*12*"); }}
 	| '(' type_name ')' '{' initializer_list '}'
 	| '(' type_name ')' '{' initializer_list ',' '}'
+	;
+
+postfix_expression_corchete_cierre
+	: expression ']'	{ 
+							fprintf(yyout, " ]");
+							if(bandera_estado.debug_mode == TRUE) 
+								fprintf(yyout, "*8*");
+						}
+	//Detección de error
+	| expression error {
+							printf("Símbolo ']' faltante [postfix_expression_corchete_cierre]\n");
+							yyerrok;
+							yyclearin;
+						}
+	;
+
+postfix_expression_parentesis_cierre
+	: ')'	{ 
+				fprintf(yyout, " )"); 
+				if(bandera_estado.debug_mode == TRUE)  
+					fprintf(yyout, "*9*"); 
+			}
+	| argument_expression_list ')'	{ 
+										fprintf(yyout, " )"); 
+										if(bandera_estado.debug_mode == TRUE) 
+											fprintf(yyout, "*10*"); 
+									}
+	//Detección de error
+	| argument_expression_list error	{
+											printf("Símbolo ')' faltante [postfix_expression_parentesis_cierre]\n");
+											yyerrok;
+											yyclearin;
+										}
+	| error {
+				printf("Símbolo ')' faltante [postfix_expression_parentesis_cierre]");
+				yyerrok;
+				yyclearin;
+			}
 	;
 
 argument_expression_list
@@ -174,12 +231,39 @@ multiplicative_expression
 	| multiplicative_expression '*' { fprintf(yyout, " * "); } cast_expression
 	| multiplicative_expression '/' { fprintf(yyout, " / "); } cast_expression
 	| multiplicative_expression '%' { fprintf(yyout, " %% "); } cast_expression
+	//Detección de error
+	| multiplicative_expression '*' error	{
+												printf("Símbolo cast_expression faltante para operación '*' [multiplicative_expression]\n");
+												yyerrok;
+												yyclearin;
+											}
+	| multiplicative_expression '/' error	{
+												printf("Símbolo cast_expression faltante para operación '/' [multiplicative_expression]\n");
+												yyerrok;
+												yyclearin;
+											}
+	| multiplicative_expression '%' error	{
+												printf("Símbolo cast_expression faltante para operación '%' [multiplicative_expression]\n");
+												yyerrok;
+												yyclearin;
+											}
 	;
 
 additive_expression
 	: multiplicative_expression
 	| additive_expression '+' { fprintf(yyout, " + "); } multiplicative_expression
 	| additive_expression '-' { fprintf(yyout, " - "); } multiplicative_expression
+	//Detección de error
+	| additive_expression '+' error	{
+										printf("Símbolo multiplicative_expression faltante para operación '+' [additive_expression]\n");
+										yyerrok;
+										yyclearin;
+									}
+	| additive_expression '-' error	{
+										printf("Símbolo multiplicative_expression faltante para operación '-' [additive_expression]\n");
+										yyerrok;
+										yyclearin;
+									}
 	;
 
 shift_expression
@@ -194,12 +278,20 @@ relational_expression
 	| relational_expression '>' { fprintf(yyout, " > "); } shift_expression
 	| relational_expression LE_OP { fprintf(yyout, " <= "); } shift_expression
 	| relational_expression GE_OP { fprintf(yyout, " >= "); } shift_expression
+	//Detección de error
+	| relational_expression '<' error {printf("Símbolo shift_expression faltante para operación '<' [relational_expression]\n");yyerrok;yyclearin;}
+	| relational_expression '>' error {printf("Símbolo shift_expression faltante para operación '>' [relational_expression]\n");yyerrok;yyclearin;}
+	| relational_expression LE_OP error {printf("Símbolo shift_expression faltante para operación 'LE_OP' [relational_expression]\n");yyerrok;yyclearin;}
+	| relational_expression GE_OP error {printf("Símbolo shift_expression faltante para operación 'GE_OP' [relational_expression]\n");yyerrok;yyclearin;}
 	;
 
 equality_expression
 	: relational_expression
 	| equality_expression EQ_OP { fprintf(yyout, " == "); } relational_expression
 	| equality_expression NE_OP { fprintf(yyout, " != "); } relational_expression
+	//Detección de errores
+	| equality_expression NE_OP error {printf("Error de operadores\n");yyerrok;yyclearin;}
+	| equality_expression EQ_OP error {printf("Error de operadores\n");yyerrok;yyclearin;}
 	;
 
 and_expression

@@ -290,8 +290,8 @@ equality_expression
 	| equality_expression EQ_OP { fprintf(yyout, " == "); } relational_expression
 	| equality_expression NE_OP { fprintf(yyout, " != "); } relational_expression
 	//Detección de errores
-	| equality_expression NE_OP error {printf("Error de operadores\n");yyerrok;yyclearin;}
-	| equality_expression EQ_OP error {printf("Error de operadores\n");yyerrok;yyclearin;}
+	| equality_expression NE_OP error {printf("Símbolo relational_expression faltante para operación 'NE_OP' [equality_expression]\n");yyerrok;yyclearin;}
+	| equality_expression EQ_OP error {printf("Símbolo relational_expression faltante para operación 'EQ_OP' [equality_expression]\n");yyerrok;yyclearin;}
 	;
 
 and_expression
@@ -312,11 +312,15 @@ inclusive_or_expression
 logical_and_expression
 	: inclusive_or_expression
 	| logical_and_expression AND_OP { fprintf(yyout, " && "); } inclusive_or_expression
+	//Detección de error
+	| logical_and_expression AND_OP error {printf("Error operador AND_OP\n");yyerrok;yyclearin;}
 	;
 
 logical_or_expression
 	: logical_and_expression
 	| logical_or_expression OR_OP { fprintf(yyout, " || "); } logical_and_expression
+	//Detección de error
+	| logical_or_expression OR_OP error {printf("Error operador OR_OP\n");yyerrok;yyclearin;}
 	;
 
 conditional_expression
@@ -327,6 +331,8 @@ conditional_expression
 assignment_expression
 	: conditional_expression
 	| unary_expression assignment_operator assignment_expression
+	//Detección de error
+	| unary_expression assignment_operator error {printf("Error operador assignment_operator\n");yyerrok;yyclearin;} 
 	;
 
 assignment_operator
@@ -346,6 +352,7 @@ assignment_operator
 expression
 	: assignment_expression
 	| expression ',' { fprintf(yyout, ", "); if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*13*"); }} assignment_expression
+	| expression ',' error { printf("Error de expresión de asignación\n");  yyerrok;yyclearin;}
 	;
 
 constant_expression
@@ -375,6 +382,9 @@ declaration
 						fprintf(yyout, "*15*"); 
 				}														
 	| static_assert_declaration
+	//Detección de error
+	| declaration_specifiers init_declarator_list error { printf("Error con ; faltante \n");  yyerrok;yyclearin;}
+	| declaration_specifiers error { printf("Error en declaración\n");  yyerrok;yyclearin;}
 	;
 
 declaration_specifiers
@@ -402,6 +412,9 @@ init_declarator
 	| declarator	{
 						$$=$1;	//Atributo sintetizado
 					}
+	//Detección de error 
+	| declarator error initializer {printf("Error en inicialización de variable\n");yyerrok;yyclearin;}
+	| declarator '=' error {printf("Error en inicialización de variable\n");yyerrok;yyclearin;}
 	;
 
 storage_class_specifier
@@ -436,6 +449,9 @@ struct_or_union_specifier
 	: struct_or_union '{' struct_declaration_list '}'
 	| struct_or_union IDENTIFIER '{' struct_declaration_list '}'
 	| struct_or_union IDENTIFIER
+	//Detección de error
+	| struct_or_union '{' struct_declaration_list error {printf("Símbolo faltante \"}\"\n");yyerrok;yyclearin;}
+	| struct_or_union IDENTIFIER '{' struct_declaration_list error {printf("Símbolo faltante \"}\"\n");yyerrok;yyclearin;}
 	;
 
 struct_or_union
@@ -452,6 +468,8 @@ struct_declaration
 	: specifier_qualifier_list ';'	/* for anonymous struct/union */
 	| specifier_qualifier_list struct_declarator_list ';'
 	| static_assert_declaration
+	//Detección de error
+	| specifier_qualifier_list struct_declarator_list error  {printf("Símbolo faltante ;\n");yyerrok;yyclearin;}
 	;
 
 specifier_qualifier_list

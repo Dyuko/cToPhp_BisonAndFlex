@@ -26,6 +26,7 @@
 	*/
 	struct bandera_estado
 	{
+		int parche_imprimir_array;
 		int funcion_declarada;
 		int ignorar_dimension_vector;
 		int ignorar_vector_multidimensional;
@@ -35,7 +36,7 @@
 	};
 
 	// Declaro e inicializo explícitamente para evitar problemas
-	struct bandera_estado bandera_estado = {FALSE, FALSE, FALSE, FALSE, FALSE, FALSE};	
+	struct bandera_estado bandera_estado = {FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE};	
 
 %}
 %token	IDENTIFIER I_CONSTANT F_CONSTANT STRING_LITERAL FUNC_NAME SIZEOF
@@ -264,6 +265,11 @@ declaration
 	| declaration_specifiers init_declarator_list ';'	
 				{
 					fprintf(yyout, "$%s", $2);	//Es para declaraciones tipo int global;
+					if(bandera_estado.parche_imprimir_array == TRUE)
+					{
+						fprintf(yyout, "=array( ");
+						bandera_estado.parche_imprimir_array = FALSE; 
+					}
 					if(bandera_estado.ignorar_vector_multidimensional == TRUE
 					&& bandera_estado.cerrar_parentesis_array == TRUE)
 					{
@@ -437,8 +443,19 @@ direct_declarator
 	| direct_declarator '[' type_qualifier_list STATIC assignment_expression ']'
 	| direct_declarator '[' type_qualifier_list assignment_expression ']'
 	| direct_declarator '[' type_qualifier_list ']'
-	| direct_declarator '[' { bandera_estado.ignorar_dimension_vector = TRUE; if (bandera_estado.ignorar_vector_multidimensional == FALSE) fprintf(yyout, "=array( "); bandera_estado.ignorar_vector_multidimensional = TRUE; }
-	assignment_expression ']' { bandera_estado.cerrar_parentesis_array = TRUE; if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*20*"); }}
+	| direct_declarator '[' { 
+								bandera_estado.ignorar_dimension_vector = TRUE; 
+								if (bandera_estado.ignorar_vector_multidimensional == FALSE) 
+									bandera_estado.parche_imprimir_array = TRUE; 
+								bandera_estado.ignorar_vector_multidimensional = TRUE; 
+							}
+	assignment_expression ']' 	{ 
+									bandera_estado.cerrar_parentesis_array = TRUE; 
+									if(bandera_estado.debug_mode == TRUE) 
+									{ 
+										fprintf(yyout, "*20*"); 
+									}
+								}
 	| direct_declarator '(' { fprintf(yyout, "( "); } parameter_type_list ')' { fprintf(yyout, " )"); if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*21*"); }}
 	| direct_declarator '(' ')' {
 									fprintf(yyout, "function %s ()", $1);

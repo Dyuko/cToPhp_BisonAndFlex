@@ -12,6 +12,8 @@
     extern int yyparse();
 	extern FILE *yyin;	// Puntero al archivo de entrada 
 	extern FILE *yyout;	// Puntero al archivo de salida
+	extern int yylineno;
+	extern char* yytext;
     void yyerror(const char* s);
 
 	/* 
@@ -827,6 +829,7 @@ int main(int argc,char **argv)
 
 void yyerror(const char *s)
 {
-	fflush(stdout);
-	fprintf(stderr, "*** %s\n", s);
+	//fflush(stdout);
+	//fprintf(stderr, "*** %s\n", s);
+	printf("*** %s en la linea: %d    %s\n", s, yylineno,yytext);
 }

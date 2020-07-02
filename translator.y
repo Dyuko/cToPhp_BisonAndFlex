@@ -281,10 +281,10 @@ relational_expression
 	| relational_expression LE_OP { fprintf(yyout, " <= "); } shift_expression
 	| relational_expression GE_OP { fprintf(yyout, " >= "); } shift_expression
 	//Detección de error
-	| relational_expression '<' error {printf("Símbolo shift_expression faltante para operación '<' [relational_expression]\n");yyerrok;yyclearin;}
-	| relational_expression '>' error {printf("Símbolo shift_expression faltante para operación '>' [relational_expression]\n");yyerrok;yyclearin;}
-	| relational_expression LE_OP error {printf("Símbolo shift_expression faltante para operación 'LE_OP' [relational_expression]\n");yyerrok;yyclearin;}
-	| relational_expression GE_OP error {printf("Símbolo shift_expression faltante para operación 'GE_OP' [relational_expression]\n");yyerrok;yyclearin;}
+	| relational_expression '<' error {printf("Símbolo shift_expression faltante para operación '<' [relational_expression]\n");}
+	| relational_expression '>' error {printf("Símbolo shift_expression faltante para operación '>' [relational_expression]\n");}
+	| relational_expression LE_OP error {printf("Símbolo shift_expression faltante para operación 'LE_OP' [relational_expression]\n");}
+	| relational_expression GE_OP error {printf("Símbolo shift_expression faltante para operación 'GE_OP' [relational_expression]\n");}
 	;
 
 equality_expression
@@ -292,8 +292,8 @@ equality_expression
 	| equality_expression EQ_OP { fprintf(yyout, " == "); } relational_expression
 	| equality_expression NE_OP { fprintf(yyout, " != "); } relational_expression
 	//Detección de errores
-	| equality_expression NE_OP error {printf("Símbolo relational_expression faltante para operación 'NE_OP' [equality_expression]\n");yyerrok;yyclearin;}
-	| equality_expression EQ_OP error {printf("Símbolo relational_expression faltante para operación 'EQ_OP' [equality_expression]\n");yyerrok;yyclearin;}
+	| equality_expression NE_OP error {printf("Símbolo relational_expression faltante para operación 'NE_OP' [equality_expression]\n");}
+	| equality_expression EQ_OP error {printf("Símbolo relational_expression faltante para operación 'EQ_OP' [equality_expression]\n");}
 	;
 
 and_expression
@@ -315,14 +315,14 @@ logical_and_expression
 	: inclusive_or_expression
 	| logical_and_expression AND_OP { fprintf(yyout, " && "); } inclusive_or_expression
 	//Detección de error
-	| logical_and_expression AND_OP error {printf("Error operador AND_OP\n");yyerrok;yyclearin;}
+	| logical_and_expression AND_OP error {printf("Error operador AND_OP\n");}
 	;
 
 logical_or_expression
 	: logical_and_expression
 	| logical_or_expression OR_OP { fprintf(yyout, " || "); } logical_and_expression
 	//Detección de error
-	| logical_or_expression OR_OP error {printf("Error operador OR_OP\n");yyerrok;yyclearin;}
+	| logical_or_expression OR_OP error {printf("Error operador OR_OP\n");}
 	;
 
 conditional_expression
@@ -334,7 +334,7 @@ assignment_expression
 	: conditional_expression
 	| unary_expression assignment_operator assignment_expression
 	//Detección de error
-	| unary_expression assignment_operator error {printf("Error operador assignment_operator\n");yyerrok;yyclearin;} 
+	| unary_expression assignment_operator error {printf("Error operador assignment_operator\n");} 
 	;
 
 assignment_operator
@@ -354,7 +354,7 @@ assignment_operator
 expression
 	: assignment_expression
 	| expression ',' { fprintf(yyout, ", "); if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*13*"); }} assignment_expression
-	| expression ',' error { printf("Error de expresión de asignación\n");  yyerrok;yyclearin;}
+	| expression ',' error { printf("Error de expresión de asignación\n");  }
 	;
 
 constant_expression
@@ -385,8 +385,8 @@ declaration
 				}														
 	| static_assert_declaration
 	//Detección de error
-	| declaration_specifiers init_declarator_list error { printf("Error con ; faltante \n");  yyerrok;yyclearin;}
-	| declaration_specifiers error { printf("Error en declaración\n");  yyerrok;yyclearin;}
+	| declaration_specifiers init_declarator_list error { printf("Error con ; faltante \n");  }
+	| declaration_specifiers error { printf("Error en declaración\n");  }
 	;
 
 declaration_specifiers
@@ -415,8 +415,8 @@ init_declarator
 						$$=$1;	//Atributo sintetizado
 					}
 	//Detección de error 
-	| declarator error initializer {printf("Error en inicialización de variable\n");yyerrok;yyclearin;}
-	| declarator '=' error {printf("Error en inicialización de variable\n");yyerrok;yyclearin;}
+	| declarator error initializer {printf("Error en inicialización de variable\n");}
+	| declarator '=' error {printf("Error en inicialización de variable\n");}
 	;
 
 storage_class_specifier
@@ -452,8 +452,8 @@ struct_or_union_specifier
 	| struct_or_union IDENTIFIER '{' struct_declaration_list '}'
 	| struct_or_union IDENTIFIER
 	//Detección de error
-	| struct_or_union '{' struct_declaration_list error {printf("Símbolo faltante \"}\"\n");yyerrok;yyclearin;}
-	| struct_or_union IDENTIFIER '{' struct_declaration_list error {printf("Símbolo faltante \"}\"\n");yyerrok;yyclearin;}
+	| struct_or_union '{' struct_declaration_list error {printf("Símbolo faltante \"}\"\n");}
+	| struct_or_union IDENTIFIER '{' struct_declaration_list error {printf("Símbolo faltante \"}\"\n");}
 	;
 
 struct_or_union
@@ -471,7 +471,7 @@ struct_declaration
 	| specifier_qualifier_list struct_declarator_list ';'
 	| static_assert_declaration
 	//Detección de error
-	| specifier_qualifier_list struct_declarator_list error  {printf("Símbolo faltante ;\n");yyerrok;yyclearin;}
+	| specifier_qualifier_list struct_declarator_list error  {printf("Símbolo faltante ;\n");}
 	;
 
 specifier_qualifier_list
@@ -575,8 +575,8 @@ direct_declarator
 								}
 	| direct_declarator '(' { fprintf(yyout, "( "); } identifier_list ')' { fprintf(yyout, " )"); if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*23*"); }}
 	//Detección de error
-	| direct_declarator '[' error {printf("Símbolo faltante \"]\"\n");yyerrok;yyclearin;}
-	| direct_declarator '(' error {printf("Símbolo faltante \")\"\n");yyerrok;yyclearin;}
+	| direct_declarator '[' error {printf("Símbolo faltante \"]\"\n");}
+	| direct_declarator '(' error {printf("Símbolo faltante \")\"\n");}
 	;
 
 pointer
@@ -606,13 +606,13 @@ parameter_declaration
 	: declaration_specifiers declarator
 	| declaration_specifiers abstract_declarator
 	| declaration_specifiers
-	| declaration_specifiers error declarator {printf("Error en declaración de parámetros\n"),yyerrok;yyclearin;}
+	| declaration_specifiers error declarator {printf("Error en declaración de parámetros\n");}
 	;
 
 identifier_list
 	: IDENTIFIER
 	| identifier_list ',' IDENTIFIER
-	| identifier_list error',' IDENTIFIER {printf("Error en lista de identificadores\n");yyerrok;yyclearin;}
+	| identifier_list error',' IDENTIFIER {printf("Error en lista de identificadores\n");}
 	;
 
 type_name
@@ -655,8 +655,8 @@ initializer
 	| '{' initializer_list ',' '}'
 	| assignment_expression
 	//Detección de error
-	| '{' initializer_list ',' error {printf("Símbolo faltante }\n");yyerrok;yyclearin;}
-	| '{' initializer_list error {printf("Símbolo faltante }\n");yyerrok;yyclearin;}
+	| '{' initializer_list ',' error {printf("Símbolo faltante }\n");}
+	| '{' initializer_list error {printf("Símbolo faltante }\n");}
 	;
 
 initializer_list
@@ -712,8 +712,8 @@ compound_statement_cierre
 	: '}' { fprintf(yyout, " }\n"); if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*27*"); }}
 	|  block_item_list '}' { fprintf(yyout, "}\n"); if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*28*"); }}
 	//Detección de error
-	| error {printf("Símbolo faltante }\n");yyerrok;yyclearin;}
-	| block_item_list error {printf("Símbolo faltante }\n");yyerrok;yyclearin;}
+	| error {printf("Símbolo faltante }\n");}
+	| block_item_list error {printf("Símbolo faltante }\n");}
 	;
 
 block_item_list
@@ -730,7 +730,7 @@ expression_statement
 	: ';' { fprintf(yyout, ";\n"); }
 	| expression ';' { fprintf(yyout, ";\n"); }
 	//Detección de error
-	| expression error {printf("Símbolo faltante ; \n");yyerrok;yyclearin;}
+	| expression error {printf("Símbolo faltante ; \n");}
 	;
 
 selection_statement
@@ -741,12 +741,12 @@ selection_statement
 if_resto
 	: ')' { fprintf(yyout, " )"); } ELSE { fprintf(yyout, "else"); } statement
 	| ')' { fprintf(yyout, " )"); }
-	| error	{printf("En el if, Símbolo faltante \")\"\n");yyerrok;yyclearin;}
+	| error	{printf("En el if, Símbolo faltante \")\"\n");}
 	;
 
 switch_resto
 	: expression ')' { fprintf(yyout, " )"); } statement
-	| expression error {printf("En el switch. Símbolo faltante \")\"\n");yyerrok;yyclearin;}
+	| expression error {printf("En el switch. Símbolo faltante \")\"\n");}
 	;
 
 iteration_statement
@@ -761,7 +761,7 @@ for_resto
 	| declaration expression_statement ')' { fprintf(yyout, " )"); } statement
 	| declaration expression_statement expression ')' { fprintf(yyout, " )"); } statement
 	//Detección de error
-	| error  {printf("Error cerca del for\n");yyerrok;yyclearin;}
+	| error  {printf("Error cerca del for\n");}
 	;
 
 jump_statement
@@ -774,8 +774,8 @@ jump_statement
 return_resto
 	: ';'				{fprintf(yyout,"return;\n");}
 	| expression ';'	{fprintf(yyout,";\n");}
-	| error 			{printf("Error en return\n");yyerrok;yyclearin;}
-	| expression error	{printf("Cerca del return. Símbolo ; faltante\n");yyerrok;yyclearin;}
+	| error 			{printf("Error en return\n");}
+	| expression error	{printf("Cerca del return. Símbolo ; faltante\n");}
 	;
 
 translation_unit	

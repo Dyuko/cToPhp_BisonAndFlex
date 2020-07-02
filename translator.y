@@ -572,6 +572,9 @@ direct_declarator
 									if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*22*"); }
 								}
 	| direct_declarator '(' { fprintf(yyout, "( "); } identifier_list ')' { fprintf(yyout, " )"); if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*23*"); }}
+	//Detección de error
+	| direct_declarator '[' error {printf("Símbolo faltante \"]\"\n");yyerrok;yyclearin;}
+	| direct_declarator '(' error {printf("Símbolo faltante \")\"\n");yyerrok;yyclearin;}
 	;
 
 pointer
@@ -601,11 +604,13 @@ parameter_declaration
 	: declaration_specifiers declarator
 	| declaration_specifiers abstract_declarator
 	| declaration_specifiers
+	| declaration_specifiers error declarator {printf("Error en declaración de parámetros\n"),yyerrok;yyclearin;}
 	;
 
 identifier_list
 	: IDENTIFIER
 	| identifier_list ',' IDENTIFIER
+	| identifier_list error',' IDENTIFIER {printf("Error en lista de identificadores\n");yyerrok;yyclearin;}
 	;
 
 type_name
@@ -647,6 +652,9 @@ initializer
 	: '{' initializer_list '}'
 	| '{' initializer_list ',' '}'
 	| assignment_expression
+	//Detección de error
+	| '{' initializer_list ',' error {printf("Símbolo faltante }\n");yyerrok;yyclearin;}
+	| '{' initializer_list error {printf("Símbolo faltante }\n");yyerrok;yyclearin;}
 	;
 
 initializer_list
@@ -694,8 +702,16 @@ labeled_statement
 	;
 
 compound_statement
-	: '{' { fprintf(yyout, "{ "); } '}' { fprintf(yyout, " }\n"); if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*27*"); }}
-	| '{' { fprintf(yyout, "{\n"); } block_item_list '}' { fprintf(yyout, "}\n"); if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*28*"); }}
+	: '{' { fprintf(yyout, "{\n"); } compound_statement_cierre
+	//Detección de error
+	;
+
+compound_statement_cierre
+	: '}' { fprintf(yyout, " }\n"); if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*27*"); }}
+	|  block_item_list '}' { fprintf(yyout, "}\n"); if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*28*"); }}
+	//Detección de error
+	| error {printf("Símbolo faltante }\n");yyerrok;yyclearin;}
+	| block_item_list error {printf("Símbolo faltante }\n");yyerrok;yyclearin;}
 	;
 
 block_item_list
@@ -711,16 +727,24 @@ block_item
 expression_statement
 	: ';' { fprintf(yyout, ";\n"); }
 	| expression ';' { fprintf(yyout, ";\n"); }
+	//Detección de error
+	| expression error {printf("Símbolo faltante ; \n");yyerrok;yyclearin;}
 	;
 
 selection_statement
-	: IF { fprintf(yyout, "if"); } '(' { fprintf(yyout, "( "); } expression ')' { fprintf(yyout, " )"); } statement if_resto
-	| SWITCH { fprintf(yyout, "switch"); } '(' { fprintf(yyout, "( "); } expression ')' { fprintf(yyout, " )"); } statement
+	: IF '(' { fprintf(yyout, "if ( "); } expression statement if_resto
+	| SWITCH '(' { fprintf(yyout, "switch ( "); } switch_resto
 	;
 
 if_resto
-	: ELSE { fprintf(yyout, "else"); } statement
-	| 
+	: ')' { fprintf(yyout, " )"); } ELSE { fprintf(yyout, "else"); } statement
+	| ')' { fprintf(yyout, " )"); }
+	| error	{printf("En el if, Símbolo faltante \")\"\n");yyerrok;yyclearin;}
+	;
+
+switch_resto
+	: expression ')' { fprintf(yyout, " )"); } statement
+	| expression error {printf("En el switch. Símbolo faltante \")\"\n");yyerrok;yyclearin;}
 	;
 
 iteration_statement
@@ -734,23 +758,33 @@ for_resto
 	| expression_statement expression_statement expression ')' { fprintf(yyout, " )"); } statement
 	| declaration expression_statement ')' { fprintf(yyout, " )"); } statement
 	| declaration expression_statement expression ')' { fprintf(yyout, " )"); } statement
+	//Detección de error
+	| error  {printf("Error cerca del for\n");yyerrok;yyclearin;}
 	;
 
 jump_statement
 	: GOTO IDENTIFIER ';'
 	| CONTINUE ';'				{fprintf(yyout,"continue;\n");}
 	| BREAK ';'					{fprintf(yyout,"break;\n");}
-	| RETURN ';'				{fprintf(yyout,"return;\n");}
-	| RETURN {fprintf(yyout,"return ");} expression ';'	{fprintf(yyout,";\n");}
+	| RETURN {fprintf(yyout,"return ");} return_resto
 	;
 
-translation_unit
+return_resto
+	: ';'				{fprintf(yyout,"return;\n");}
+	| expression ';'	{fprintf(yyout,";\n");}
+	| error 			{printf("Error en return\n");yyerrok;yyclearin;}
+	| expression error	{printf("Cerca del return. Símbolo ; faltante\n");yyerrok;yyclearin;}
+	;
+
+translation_unit	
 	: external_declaration
 	| translation_unit external_declaration
 	;
-
-external_declaration
+//declaración externa
+external_declaration	
+	//declaración de función
 	: function_definition {bandera_estado.funcion_declarada = TRUE;if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*29*"); }}
+	//declaración global
 	| declaration
 	;
 //Declaración de una función

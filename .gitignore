@@ -2,4 +2,5 @@ lex.yy.c
 translator
 translator.tab.c
 translator.tab.h
-/codigos_ejemplo
+codigos_ejemplo/
+

@@ -26,7 +26,16 @@ symrec * getsym(char *sym_name)
 void print_sym_table()
 {
 	printf("Symbol Table\n");
+	printf("Name\t\tType\t\tVariable or Function\n");
     symrec *ptr;
     for (ptr = sym_table; ptr != (symrec *)0; ptr = (symrec *)ptr->next)
-        printf("%s\t\t%s\n", ptr->name, ptr->type);
+	{
+        printf("%s\t\t%s", ptr->name, ptr->type);
+		if(ptr->function == 1)
+			printf("\t\tFunction\n");
+		else
+		{
+			printf("\t\tVariable\n");
+		}
+	}	
 }

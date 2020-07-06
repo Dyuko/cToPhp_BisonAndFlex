@@ -16,12 +16,12 @@
 
 	/* 
 	* Una estructura que representa un conjunto de banderas de estados
+	* parche_imprimir_array: Bandera utilizada para corregir orden de impresión incorrecta al declarar un array con elementos
 	* funcion_declarada: Si se declara una función en c, en php debo imprimir function 
 	* ignorar_dimension_vector: En c se declara la dimensión del vector, en php lo ignoro
 	* ignorar_vector_multidimensional: Si se detecta un vector multidimensional en c, debo evitar imprimir array() array() en php
-	* error_detectado: Si se ha detectado un error
 	* variable_global_detectada: Si se ha detectado una variable global declarada en c
-
+	* cerrar_parentesis_array: Bandera utilizada para imprimir correctamente al declarar un array
 	* debug_mode: Utilizado para debuggear, habilita la impresión de identificadores en las reglas semánticas 
 	*/
 	struct bandera_estado
@@ -30,13 +30,12 @@
 		int funcion_declarada;
 		int ignorar_dimension_vector;
 		int ignorar_vector_multidimensional;
-		int error_detectado;
 		int cerrar_parentesis_array;
 		int debug_mode;
 	};
 
 	// Declaro e inicializo explícitamente para evitar problemas
-	struct bandera_estado bandera_estado = {FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE};	
+	struct bandera_estado bandera_estado = {FALSE, FALSE, FALSE, FALSE, FALSE, FALSE};	
 
 	//Symbol Table
 	symrec *sym_table = (symrec * )0;

@@ -1,4 +1,4 @@
-SRCS = translator.tab.c lex.yy.c 
+SRCS = translator.tab.c lex.yy.c symboltable.c
 CC = gcc -O3
 
 # if we compile them all together, we should get out what we want!

@@ -3,7 +3,7 @@
     #include <stdio.h>
     #include <stdlib.h>
 	#include <string.h>
-	#include "header.h"
+	#include "symboltable.h"
 	#ifndef YYSTYPE
     	# define YYSTYPE char*
 	#endif
@@ -41,6 +41,10 @@
 	// Declaro e inicializo explícitamente para evitar problemas
 	struct bandera_estado bandera_estado = {FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE};	
 
+	//Symbol Table
+	symrec *sym_table = (symrec * )0;
+	symrec *s;
+	symrec *symtable_set_type;
 %}
 %token	IDENTIFIER I_CONSTANT F_CONSTANT STRING_LITERAL FUNC_NAME SIZEOF
 %token	PTR_OP INC_OP DEC_OP LEFT_OP RIGHT_OP LE_OP GE_OP EQ_OP NE_OP
@@ -363,7 +367,11 @@ constant_expression
 	;
 
 declaration
-	: declaration_specifiers ';' {fprintf(yyout, ";\n"); if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*14*"); }}
+	: declaration_specifiers ';'	{
+										fprintf(yyout, ";\n"); 
+										if(bandera_estado.debug_mode == TRUE)
+											fprintf(yyout, "*14*"); 
+									}
 	| declaration_specifiers init_declarator_list ';'	
 				{
 					fprintf(yyout, "$%s", $2);	//Es para declaraciones tipo int global;
@@ -383,6 +391,12 @@ declaration
 						fprintf(yyout, ";\n");
 					if(bandera_estado.debug_mode == TRUE)  
 						fprintf(yyout, "*15*"); 
+					//Symbol Table
+					for(symtable_set_type=sym_table; symtable_set_type!=(symrec *)0; symtable_set_type=(symrec *)symtable_set_type->next){
+								if(symtable_set_type->type==-1){
+									symtable_set_type->type=$1;
+								}
+							}
 				}														
 	| static_assert_declaration
 	//Detección de error
@@ -411,9 +425,39 @@ init_declarator_list
 	;
 
 init_declarator
-	: declarator '=' {if(bandera_estado.cerrar_parentesis_array == TRUE) fprintf(yyout, "=");if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*17*"); }} initializer
+	: declarator 
+				{
+					//Symbol Table
+					s=getsym($1);
+					if(s==(symrec *)0)
+					{
+						s=putsym($1, -1, 0);
+					}
+					else
+					{
+						printf("Variable ya declarada!\n");
+						yyerrok;
+					}
+				}
+	'='	{
+			if(bandera_estado.cerrar_parentesis_array == TRUE) 
+				fprintf(yyout, "=");
+			if(bandera_estado.debug_mode == TRUE) 
+				fprintf(yyout, "*17*");
+		} 
+	initializer
 	| declarator	{
-						$$=$1;	//Atributo sintetizado
+						//Symbol Table
+						s = getsym($1);
+						if (s==(symrec *)0)
+						{
+							s = putsym($1, -1, 0);
+						}
+						else
+						{
+							printf("Variable ya declarada!\n");
+							yyerrok;	
+						}
 					}
 	//Detección de error 
 	| declarator error initializer {printf("Error en inicialización de variable\n");}
@@ -605,6 +649,19 @@ parameter_list
 
 parameter_declaration
 	: declaration_specifiers declarator
+									{
+										//Symbol Table
+										s=getsym($2);
+										if(s==(symrec *) 0)
+										{
+											s=putsym($2, $1, 0);
+										}
+										else
+										{
+											printf("Variable ya declarada!\n");
+											yyerrok;
+										}
+									}	
 	| declaration_specifiers abstract_declarator
 	| declaration_specifiers
 	| declaration_specifiers error declarator {printf("Error en declaración de parámetros\n");}
@@ -793,7 +850,22 @@ external_declaration
 //Declaración de una función
 function_definition
 	: declaration_specifiers declarator declaration_list compound_statement {if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*30*"); }}
-	| declaration_specifiers declarator compound_statement { if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*31*"); }}
+	| declaration_specifiers declarator compound_statement 	{ 
+																if(bandera_estado.debug_mode == TRUE) 
+																	fprintf(yyout, "*31*");
+																
+																//Symbol Table
+																s=getsym($2);
+																if(s==(symrec *)0)
+																{
+																	s=putsym($2,$1,1);
+																}
+																else
+																{
+																	printf("Funcion ya declarada!");
+																	yyerrok;
+																}
+															}
 	;
 
 declaration_list
@@ -823,14 +895,14 @@ int main(int argc,char **argv)
 	}
 	fprintf(yyout, "<?php\n");
 	yyparse();
+	fprintf(yyout, "main()\n");
 	fprintf(yyout, "?>\n");
+	print_sym_table();
 	fclose(yyin);		//Cerrar archivo de entrada
 	fclose(yyout);	//Cerrar archivo de salida
 }
 
 void yyerror(const char *s)
 {
-	//fflush(stdout);
-	//fprintf(stderr, "*** %s\n", s);
 	printf("*** %s en la linea: %d    %s\n", s, yylineno,yytext);
 }

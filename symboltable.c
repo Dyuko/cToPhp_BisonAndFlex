@@ -1,4 +1,7 @@
-#include "symboltable.h"
+#include "header.h"
+/*
+* Función put para la tabla de símbolos
+*/
 symrec * putsym(char *sym_name,	char* sym_type, int b_function)
 {
 	symrec *ptr;
@@ -12,6 +15,9 @@ symrec * putsym(char *sym_name,	char* sym_type, int b_function)
 	sym_table = ptr;
 	return ptr;
 }
+/*
+* Función get para la tabla de símbolos
+*/
 symrec * getsym(char *sym_name)
 {
 	symrec *ptr;
@@ -23,6 +29,9 @@ symrec * getsym(char *sym_name)
 		}
 	return 0;
 }
+/*
+* Imprimir la tabla de símbolos
+*/
 void print_sym_table()
 {
 	printf("Symbol Table\n");

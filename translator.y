@@ -1,6 +1,6 @@
- 
-%{
-	#include "symboltable.h"
+ %{
+	#include "header.h"
+	//Hace que todos los tokens sean de tipo char*
 	#ifndef YYSTYPE
     	# define YYSTYPE char*
 	#endif
@@ -8,33 +8,13 @@
 	#define FALSE 0
     extern int yylex();
     extern int yyparse();
-	extern FILE *yyin;	// Puntero al archivo de entrada 
-	extern FILE *yyout;	// Puntero al archivo de salida
-	extern int yylineno;
+	extern FILE *yyin;		// Puntero al archivo de entrada 
+	extern FILE *yyout;		// Puntero al archivo de salida
+	extern int yylineno;	// Número de línea actual en el archivo de entrada
 	extern char* yytext;
     void yyerror(const char* s);
 
-	/* 
-	* Una estructura que representa un conjunto de banderas de estados
-	* parche_imprimir_array: Bandera utilizada para corregir orden de impresión incorrecta al declarar un array con elementos
-	* funcion_declarada: Si se declara una función en c, en php debo imprimir function 
-	* ignorar_dimension_vector: En c se declara la dimensión del vector, en php lo ignoro
-	* ignorar_vector_multidimensional: Si se detecta un vector multidimensional en c, debo evitar imprimir array() array() en php
-	* variable_global_detectada: Si se ha detectado una variable global declarada en c
-	* cerrar_parentesis_array: Bandera utilizada para imprimir correctamente al declarar un array
-	* debug_mode: Utilizado para debuggear, habilita la impresión de identificadores en las reglas semánticas 
-	*/
-	struct bandera_estado
-	{
-		int parche_imprimir_array;
-		int funcion_declarada;
-		int ignorar_dimension_vector;
-		int ignorar_vector_multidimensional;
-		int cerrar_parentesis_array;
-		int debug_mode;
-	};
-
-	// Declaro e inicializo explícitamente para evitar problemas
+	// Declaro e inicializo explícitamente 
 	struct bandera_estado bandera_estado = {FALSE, FALSE, FALSE, FALSE, FALSE, FALSE};	
 
 	//Symbol Table
@@ -48,23 +28,18 @@
 %token	SUB_ASSIGN LEFT_ASSIGN RIGHT_ASSIGN AND_ASSIGN
 %token	XOR_ASSIGN OR_ASSIGN
 %token	TYPEDEF_NAME ENUMERATION_CONSTANT
-
 %token	TYPEDEF EXTERN STATIC AUTO REGISTER INLINE
 %token	CONST RESTRICT VOLATILE
 %token	BOOL CHAR SHORT INT LONG SIGNED UNSIGNED FLOAT DOUBLE VOID
 %token	COMPLEX IMAGINARY 
 %token	STRUCT UNION ENUM ELLIPSIS
-
 %token	CASE DEFAULT IF ELSE SWITCH WHILE DO FOR GOTO CONTINUE BREAK RETURN
-
 %token	ALIGNAS ALIGNOF ATOMIC GENERIC NORETURN STATIC_ASSERT THREAD_LOCAL
-
 %start translation_unit
 %%
 primary_expression
-	//Variables dentro del for se detectan aquí
 	: IDENTIFIER{
-		 			if (bandera_estado.funcion_declarada == TRUE)
+		 			if (bandera_estado.funcion_declarada == TRUE)	//Si es una función imprimo "function"
 					{ 
 						fprintf(yyout, "function %s", $1); 
 						bandera_estado.funcion_declarada = FALSE;
@@ -73,12 +48,13 @@ primary_expression
 					{ 
 						fprintf(yyout, "$%s", $1);
 					} 
-					if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*1*"); }
+					if(bandera_estado.debug_mode == TRUE)
+						fprintf(yyout, "*1*");
 				} 
 	| constant
 	| string
 	| '('	{ 
-				fprintf(yyout, "( "); 
+				fprintf(yyout, "("); 
 			}
 	expression_cierre 
 	| generic_selection
@@ -86,7 +62,7 @@ primary_expression
 
 expression_cierre
 	: expression ')'	{ 
-							fprintf(yyout, " )"); 
+							fprintf(yyout, ")"); 
 							if(bandera_estado.debug_mode == TRUE) 
 								fprintf(yyout, "*2*"); 
 						}
@@ -98,9 +74,9 @@ expression_cierre
 						}
 	;
 
-//Al imprimir una constante debo verificar si esta no es la dimensión de un array, si lo es debo ignorarla
 constant
 	: I_CONSTANT	{
+						//Al imprimir una constante debo verificar si esta no es la dimensión de un array, si lo es debo ignorarla
 						if (bandera_estado.ignorar_dimension_vector == TRUE)
 							bandera_estado.ignorar_dimension_vector = FALSE; //dejo de ignorar
 						else
@@ -863,10 +839,9 @@ declaration_list
 %%
 int main(int argc,char **argv)
 {
-	if(argc != 3)	//La cantidad de parámetros debe ser tres
-	{
+	if(argc != 3)	//La cantidad de parámetros debe ser tre
 		printf("Parámetros incorrectos.");
-	}
+
 	char* archivo_c = argv[1];		//Path al archivo c 
 	char* archivo_php = argv[2];	//Path al archivo php
 
@@ -886,7 +861,7 @@ int main(int argc,char **argv)
 	fprintf(yyout, "?>\n");
 	print_sym_table();
 	fclose(yyin);		//Cerrar archivo de entrada
-	fclose(yyout);	//Cerrar archivo de salida
+	fclose(yyout);		//Cerrar archivo de salida
 }
 
 void yyerror(const char *s)

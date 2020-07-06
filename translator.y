@@ -539,6 +539,10 @@ direct_declarator
 						}
 					}
 
+    | IDENTIFIER '(' ')'{
+                            fprintf(yyout, "function %s ()", $1);
+                            if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*22*"); }
+                        }
 	| '(' declarator ')'
 	| direct_declarator '[' { if (bandera_estado.ignorar_vector_multidimensional == FALSE) fprintf(yyout, "=array( "); bandera_estado.ignorar_vector_multidimensional = TRUE; }
 	 ']' { bandera_estado.cerrar_parentesis_array =TRUE; debug_mode(18);}

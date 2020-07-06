@@ -40,6 +40,7 @@
 %%
 primary_expression
 	: IDENTIFIER{
+					$$ = $1;
 		 			if (bandera_estado.funcion_declarada == TRUE)	//Si es una función imprimo "function"
 					{ 
 						fprintf(yyout, "function %s", $1); 
@@ -51,7 +52,15 @@ primary_expression
 					} 
 					debug_mode(1);
 				} 
-	| constant
+	| constant	{
+					$$ = $1;
+					//Al imprimir una constante debo verificar si esta no es la dimensión de un array, si lo es debo ignorarla
+					if (bandera_estado.ignorar_dimension_vector == TRUE)
+						bandera_estado.ignorar_dimension_vector = FALSE; //dejo de ignorar
+					else
+						fprintf(yyout, "%s", $1);
+					debug_mode(3);
+				}	
 	| string
 	| '('	{ 
 				fprintf(yyout, "("); 
@@ -74,29 +83,9 @@ expression_cierre
 	;
 
 constant
-	: I_CONSTANT	{
-						//Al imprimir una constante debo verificar si esta no es la dimensión de un array, si lo es debo ignorarla
-						if (bandera_estado.ignorar_dimension_vector == TRUE)
-							bandera_estado.ignorar_dimension_vector = FALSE; //dejo de ignorar
-						else
-							fprintf(yyout, "%s", $1);
-						debug_mode(3);
-					}		
-	| F_CONSTANT 	{
-						if (bandera_estado.ignorar_dimension_vector == TRUE)
-							bandera_estado.ignorar_dimension_vector = FALSE; //dejo de ignorar
-						else
-							fprintf(yyout, "%s", $1);
-						debug_mode(4);
-					}	
-	| ENUMERATION_CONSTANT 
-					{
-						if (bandera_estado.ignorar_dimension_vector == TRUE)
-							bandera_estado.ignorar_dimension_vector = FALSE; //dejo de ignorar
-						else
-							fprintf(yyout, "%s", $1);
-						debug_mode(5);
-					}	
+	: I_CONSTANT			{$$ = $1;}		
+	| F_CONSTANT 			{$$ = $1;}	
+	| ENUMERATION_CONSTANT 	{$$ = $1;}	
 	;
 
 enumeration_constant		/* before it has been defined as such */
@@ -305,8 +294,8 @@ conditional_expression
 	;
 
 assignment_expression
-	: conditional_expression
-	| unary_expression assignment_operator assignment_expression
+	: conditional_expression	{debug_mode(41);}
+	| unary_expression assignment_operator assignment_expression	{debug_mode(40);}
 	//Detección de error
 	| unary_expression assignment_operator error {printf("Error operador assignment_operator\n");} 
 	;
@@ -342,7 +331,7 @@ declaration
 									}
 	| declaration_specifiers init_declarator_list ';'	
 				{
-					fprintf(yyout, "$%s", $2);	//Es para declaraciones tipo int global;
+					//fprintf(yyout, "$%s", $2);	//Es para declaraciones tipo int global;
 					if(bandera_estado.parche_imprimir_array == TRUE)
 					{
 						fprintf(yyout, "=array( ");
@@ -410,7 +399,7 @@ init_declarator
 
 init_declarator_resto
 	: '='	{
-				if(bandera_estado.cerrar_parentesis_array == TRUE) 
+				if(bandera_estado.cerrar_parentesis_array == FALSE) 
 					fprintf(yyout, "=");
 				debug_mode(16);
 			} 
@@ -544,6 +533,10 @@ direct_declarator
 	: IDENTIFIER	{ 
 						$$ = $1;	//Atributo sintetizado necesario
 						debug_mode(17);
+						if(bandera_estado.funcion_declarada == FALSE)
+						{
+							fprintf(yyout, "$%s", $1);
+						}
 					}
 
 	| '(' declarator ')'
@@ -796,7 +789,9 @@ translation_unit
 //declaración externa
 external_declaration	
 	//declaración de función
-	: function_definition {bandera_estado.funcion_declarada = TRUE;if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*29*"); }}
+	: function_definition 	{	bandera_estado.funcion_declarada = TRUE;
+								debug_mode(41);
+							}
 	//declaración global
 	| declaration
 	;

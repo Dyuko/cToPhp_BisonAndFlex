@@ -34,17 +34,23 @@ symrec * getsym(char *sym_name)
 */
 void print_sym_table()
 {
-	printf("Symbol Table\n");
-	printf("Name\t\tType\t\tVariable or Function\n");
+	printf("\t\t\tTabla de símbolos\n");
+	printf("Identificador\t\tTipo de valor\t\tTipo de símbolo\n");
     symrec *ptr;
     for (ptr = sym_table; ptr != (symrec *)0; ptr = (symrec *)ptr->next)
 	{
-        printf("%s\t\t%s", ptr->name, ptr->type);
-		if(ptr->function == 1)
-			printf("\t\tFunction\n");
-		else
+        printf("%s\t\t\t%s", ptr->name, ptr->type);
+		switch(ptr->function)
 		{
-			printf("\t\tVariable\n");
+			case T_FUNCTION: 
+						printf("\t\t\tFunción\n");
+						break;
+			case T_VARIABLE: 
+						printf("\t\t\tVariable\n");
+						break;
+			case T_CONSTANT: 
+						printf("\t\t\tConstante\n");
+						break;
 		}
 	}	
 }

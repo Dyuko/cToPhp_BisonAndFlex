@@ -1,6 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#define T_VARIABLE 0
+#define T_FUNCTION 1
+#define T_CONSTANT 2
 /* Function type. */
 typedef double (func_t) (double);
 

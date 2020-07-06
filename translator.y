@@ -83,9 +83,33 @@ expression_cierre
 	;
 
 constant
-	: I_CONSTANT			{$$ = $1;}		
-	| F_CONSTANT 			{$$ = $1;}	
-	| ENUMERATION_CONSTANT 	{$$ = $1;}	
+	: I_CONSTANT			{
+								$$ = $1;
+								//Symbol Table
+								s=getsym($1);
+								if(s==(symrec *) 0)
+								{
+									s=putsym($1, "int", T_CONSTANT);
+								}	
+							}		
+	| F_CONSTANT 			{
+								$$ = $1;
+								//Symbol Table
+								s=getsym($1);
+								if(s==(symrec *) 0)
+								{
+									s=putsym($1, "float", T_CONSTANT);
+								}
+							}	
+	| ENUMERATION_CONSTANT 	{
+								$$ = $1;
+								//Symbol Table
+								s=getsym($1);
+								if(s==(symrec *) 0)
+								{
+									s=putsym($1, "ENUMERATION_CONSTANT", T_CONSTANT);
+								}
+							}	
 	;
 
 enumeration_constant		/* before it has been defined as such */
@@ -93,7 +117,11 @@ enumeration_constant		/* before it has been defined as such */
 	;
 
 string
-	: STRING_LITERAL {fprintf(yyout, "%s", $1); debug_mode(6);}
+	: STRING_LITERAL	{
+							fprintf(yyout, "%s", $1); 
+							debug_mode(6);
+							$$ = $1;
+						}
 	| FUNC_NAME {fprintf(yyout, "%s", $1); debug_mode(7);}
 	;
 
@@ -604,7 +632,7 @@ parameter_declaration
 										s=getsym($2);
 										if(s==(symrec *) 0)
 										{
-											s=putsym($2, $1, 0);
+											s=putsym($2, $1, T_VARIABLE);
 										}
 										else
 										{
@@ -809,7 +837,7 @@ function_definition
 																s=getsym($2);
 																if(s==(symrec *)0)
 																{
-																	s=putsym($2,$1,1);
+																	s=putsym($2,$1,T_FUNCTION);
 																}
 																else
 																{
@@ -857,9 +885,20 @@ void yyerror(const char *s)
 	printf("*** %s en la linea: %d    %s\n", s, yylineno,yytext);
 }
 
-/*Imprime un índice en las reglas semánticas para facilitar el debugueo */
+/*
+* Imprime un índice en las reglas semánticas para facilitar el debugueo 
+* Se utiliza para visualizar el camino seguido en la gramática dada una entrada
+*/ 
 void debug_mode(int indice)
 {
-	if(bandera_estado.debug_mode == TRUE)
+	if(bandera_estado.debug_mode == TRUE)	//Si está habilitada la opción de debug
 		fprintf(yyout, "*%d*", indice);
+}
+
+/*
+* Realiza la comprobación de tipos, imprime un error en caso de encontrar inconcordancia en los tipos
+*/
+void comprobacion_de_tipo(char* operando_1, char* operando_2, char* operacion)
+{
+
 }

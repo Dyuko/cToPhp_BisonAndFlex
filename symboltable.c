@@ -1,6 +1,5 @@
-#include <stdio.h>
 #include "symboltable.h"
-symrec * putsym(char *sym_name,	int sym_type, int b_function)
+symrec * putsym(char *sym_name,	char* sym_type, int b_function)
 {
 	symrec *ptr;
 	ptr = (symrec *) malloc(sizeof(symrec));
@@ -26,7 +25,8 @@ symrec * getsym(char *sym_name)
 }
 void print_sym_table()
 {
+	printf("Symbol Table\n");
     symrec *ptr;
     for (ptr = sym_table; ptr != (symrec *)0; ptr = (symrec *)ptr->next)
-        printf("\n%s    %s\n", ptr->name, ptr->type);
+        printf("%s\t\t%s\n", ptr->name, ptr->type);
 }

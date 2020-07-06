@@ -1,8 +1,5 @@
  
 %{
-    #include <stdio.h>
-    #include <stdlib.h>
-	#include <string.h>
 	#include "symboltable.h"
 	#ifndef YYSTYPE
     	# define YYSTYPE char*
@@ -393,7 +390,7 @@ declaration
 						fprintf(yyout, "*15*"); 
 					//Symbol Table
 					for(symtable_set_type=sym_table; symtable_set_type!=(symrec *)0; symtable_set_type=(symrec *)symtable_set_type->next){
-								if(symtable_set_type->type==-1){
+								if(symtable_set_type->type == NULL){
 									symtable_set_type->type=$1;
 								}
 							}
@@ -425,33 +422,11 @@ init_declarator_list
 	;
 
 init_declarator
-	: declarator 
-				{
-					//Symbol Table
-					s=getsym($1);
-					if(s==(symrec *)0)
-					{
-						s=putsym($1, -1, 0);
-					}
-					else
-					{
-						printf("Variable ya declarada!\n");
-						yyerrok;
-					}
-				}
-	'='	{
-			if(bandera_estado.cerrar_parentesis_array == TRUE) 
-				fprintf(yyout, "=");
-			if(bandera_estado.debug_mode == TRUE) 
-				fprintf(yyout, "*17*");
-		} 
-	initializer
-	| declarator	{
-						//Symbol Table
+	: declarator	{
 						s = getsym($1);
 						if (s==(symrec *)0)
 						{
-							s = putsym($1, -1, 0);
+							s = putsym($1, NULL, 0);
 						}
 						else
 						{
@@ -459,9 +434,22 @@ init_declarator
 							yyerrok;	
 						}
 					}
+
+	init_declarator_resto
+	;
+
+init_declarator_resto
+	: '='	{
+				if(bandera_estado.cerrar_parentesis_array == TRUE) 
+					fprintf(yyout, "=");
+				if(bandera_estado.debug_mode == TRUE) 
+					fprintf(yyout, "*17*");
+			} 
+	initializer
+	|
 	//Detección de error 
-	| declarator error initializer {printf("Error en inicialización de variable\n");}
-	| declarator '=' error {printf("Error en inicialización de variable\n");}
+	| error initializer {printf("Error en inicialización de variable\n");}
+	| '=' error {printf("Error en inicialización de variable\n");}
 	;
 
 storage_class_specifier

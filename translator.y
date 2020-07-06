@@ -193,7 +193,7 @@ cast_expression
 
 multiplicative_expression
 	: cast_expression
-	| multiplicative_expression '*' { fprintf(yyout, " * "); } cast_expression
+	| multiplicative_expression '*' { fprintf(yyout, " * "); } cast_expression {printf(":::%s*%s\n",$1,$4);}
 	| multiplicative_expression '/' { fprintf(yyout, " / "); } cast_expression
 	| multiplicative_expression '%' { fprintf(yyout, " %% "); } cast_expression
 	//Detección de error

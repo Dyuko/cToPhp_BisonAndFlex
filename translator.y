@@ -1,6 +1,6 @@
  %{
 	#include "header.h"
-	//Hace que todos los tokens sean de tipo char*
+	//Definir todos los tokens como tipo char*
 	#ifndef YYSTYPE
     	# define YYSTYPE char*
 	#endif
@@ -13,6 +13,7 @@
 	extern int yylineno;	// Número de línea actual en el archivo de entrada
 	extern char* yytext;
     void yyerror(const char* s);
+	void debug_mode(int indice);
 
 	// Declaro e inicializo explícitamente 
 	struct bandera_estado bandera_estado = {FALSE, FALSE, FALSE, FALSE, FALSE, FALSE};	
@@ -48,8 +49,7 @@ primary_expression
 					{ 
 						fprintf(yyout, "$%s", $1);
 					} 
-					if(bandera_estado.debug_mode == TRUE)
-						fprintf(yyout, "*1*");
+					debug_mode(1);
 				} 
 	| constant
 	| string
@@ -63,8 +63,7 @@ primary_expression
 expression_cierre
 	: expression ')'	{ 
 							fprintf(yyout, ")"); 
-							if(bandera_estado.debug_mode == TRUE) 
-								fprintf(yyout, "*2*"); 
+							debug_mode(2);
 						}
 	//Detección de error
 	| expression error	{
@@ -81,14 +80,14 @@ constant
 							bandera_estado.ignorar_dimension_vector = FALSE; //dejo de ignorar
 						else
 							fprintf(yyout, "%s", $1);
-						if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*3*"); }
+						debug_mode(3);
 					}		
 	| F_CONSTANT 	{
 						if (bandera_estado.ignorar_dimension_vector == TRUE)
 							bandera_estado.ignorar_dimension_vector = FALSE; //dejo de ignorar
 						else
 							fprintf(yyout, "%s", $1);
-						if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*4*"); }
+						debug_mode(4);
 					}	
 	| ENUMERATION_CONSTANT 
 					{
@@ -96,7 +95,7 @@ constant
 							bandera_estado.ignorar_dimension_vector = FALSE; //dejo de ignorar
 						else
 							fprintf(yyout, "%s", $1);
-						if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*5*"); }
+						debug_mode(5);
 					}	
 	;
 
@@ -105,8 +104,8 @@ enumeration_constant		/* before it has been defined as such */
 	;
 
 string
-	: STRING_LITERAL {fprintf(yyout, "%s", $1); if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*61*"); }}
-	| FUNC_NAME {fprintf(yyout, "%s", $1); if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*7*"); }}
+	: STRING_LITERAL {fprintf(yyout, "%s", $1); debug_mode(6);}
+	| FUNC_NAME {fprintf(yyout, "%s", $1); debug_mode(7);}
 	;
 
 generic_selection
@@ -132,8 +131,8 @@ postfix_expression
 	| postfix_expression '(' { fprintf(yyout, "( "); } postfix_expression_parentesis_cierre
 	| postfix_expression '.' IDENTIFIER
 	| postfix_expression PTR_OP IDENTIFIER
-	| postfix_expression INC_OP { fprintf(yyout, "++"); if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*11*"); }}
-	| postfix_expression DEC_OP { fprintf(yyout, "--"); if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*12*"); }}
+	| postfix_expression INC_OP { fprintf(yyout, "++"); debug_mode(8);}
+	| postfix_expression DEC_OP { fprintf(yyout, "--"); debug_mode(9);}
 	| '(' type_name ')' '{' initializer_list '}'
 	| '(' type_name ')' '{' initializer_list ',' '}'
 	;
@@ -141,8 +140,7 @@ postfix_expression
 postfix_expression_corchete_cierre
 	: expression ']'	{ 
 							fprintf(yyout, " ]");
-							if(bandera_estado.debug_mode == TRUE) 
-								fprintf(yyout, "*8*");
+							debug_mode(10);
 						}
 	//Detección de error
 	| expression error {
@@ -160,8 +158,7 @@ postfix_expression_parentesis_cierre
 			}
 	| argument_expression_list ')'	{ 
 										fprintf(yyout, " )"); 
-										if(bandera_estado.debug_mode == TRUE) 
-											fprintf(yyout, "*10*"); 
+										debug_mode(11);
 									}
 	//Detección de error
 	| argument_expression_list error	{
@@ -330,7 +327,7 @@ assignment_operator
 
 expression
 	: assignment_expression
-	| expression ',' { fprintf(yyout, ", "); if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*13*"); }} assignment_expression
+	| expression ',' { fprintf(yyout, ", "); debug_mode(12);} assignment_expression
 	| expression ',' error { printf("Error de expresión de asignación\n");  }
 	;
 
@@ -341,8 +338,7 @@ constant_expression
 declaration
 	: declaration_specifiers ';'	{
 										fprintf(yyout, ";\n"); 
-										if(bandera_estado.debug_mode == TRUE)
-											fprintf(yyout, "*14*"); 
+										debug_mode(13);
 									}
 	| declaration_specifiers init_declarator_list ';'	
 				{
@@ -361,8 +357,7 @@ declaration
 					}
 					else
 						fprintf(yyout, ";\n");
-					if(bandera_estado.debug_mode == TRUE)  
-						fprintf(yyout, "*15*"); 
+					debug_mode(14);
 					//Symbol Table
 					for(symtable_set_type=sym_table; symtable_set_type!=(symrec *)0; symtable_set_type=(symrec *)symtable_set_type->next){
 								if(symtable_set_type->type == NULL){
@@ -393,7 +388,7 @@ init_declarator_list
 	: init_declarator	{
 							$$=$1;	//Atributo sintetizado
 						}
-	| init_declarator_list ',' { fprintf(yyout, ";\n"); if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*16*"); }} init_declarator
+	| init_declarator_list ',' { fprintf(yyout, ";\n"); debug_mode(15);} init_declarator
 	;
 
 init_declarator
@@ -417,8 +412,7 @@ init_declarator_resto
 	: '='	{
 				if(bandera_estado.cerrar_parentesis_array == TRUE) 
 					fprintf(yyout, "=");
-				if(bandera_estado.debug_mode == TRUE) 
-					fprintf(yyout, "*17*");
+				debug_mode(16);
 			} 
 	initializer
 	|
@@ -549,13 +543,12 @@ declarator
 direct_declarator
 	: IDENTIFIER	{ 
 						$$ = $1;	//Atributo sintetizado necesario
-						if(bandera_estado.debug_mode == TRUE)	//Ayuda para debuggear
-							fprintf(yyout, "*18*"); 
+						debug_mode(17);
 					}
 
 	| '(' declarator ')'
 	| direct_declarator '[' { if (bandera_estado.ignorar_vector_multidimensional == FALSE) fprintf(yyout, "=array( "); bandera_estado.ignorar_vector_multidimensional = TRUE; }
-	 ']' { bandera_estado.cerrar_parentesis_array =TRUE; if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*19*"); }}
+	 ']' { bandera_estado.cerrar_parentesis_array =TRUE; debug_mode(18);}
 	| direct_declarator '[' '*' ']'
 	| direct_declarator '[' STATIC type_qualifier_list assignment_expression ']'
 	| direct_declarator '[' STATIC assignment_expression ']'
@@ -571,17 +564,14 @@ direct_declarator
 							}
 	assignment_expression ']' 	{ 
 									bandera_estado.cerrar_parentesis_array = TRUE; 
-									if(bandera_estado.debug_mode == TRUE) 
-									{ 
-										fprintf(yyout, "*20*"); 
-									}
+									debug_mode(19);
 								}
-	| direct_declarator '(' { fprintf(yyout, "( "); } parameter_type_list ')' { fprintf(yyout, " )"); if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*21*"); }}
+	| direct_declarator '(' { fprintf(yyout, "( "); } parameter_type_list ')' { fprintf(yyout, " )"); debug_mode(20);}
 	| direct_declarator '(' ')' {
 									fprintf(yyout, "function %s ()", $1);
 									if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*22*"); }
 								}
-	| direct_declarator '(' { fprintf(yyout, "( "); } identifier_list ')' { fprintf(yyout, " )"); if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*23*"); }}
+	| direct_declarator '(' { fprintf(yyout, "( "); } identifier_list ')' { fprintf(yyout, " )"); debug_mode(21);}
 	//Detección de error
 	| direct_declarator '[' error {printf("Símbolo faltante \"]\"\n");}
 	| direct_declarator '(' error {printf("Símbolo faltante \")\"\n");}
@@ -719,9 +709,9 @@ statement
 	;
 
 labeled_statement
-	: IDENTIFIER { fprintf(yyout, $1); } ':' { fprintf(yyout, ": "); } statement {if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*24*"); }}
-	| CASE { fprintf(yyout, "case "); } constant_expression ':' { fprintf(yyout, ": "); } statement {if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*25*"); }}
-	| DEFAULT { fprintf(yyout, "default "); } ':' { fprintf(yyout, ": "); } statement {if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*26*"); }}
+	: IDENTIFIER { fprintf(yyout, $1); } ':' { fprintf(yyout, ": "); } statement {debug_mode(22);}
+	| CASE { fprintf(yyout, "case "); } constant_expression ':' { fprintf(yyout, ": "); } statement {debug_mode(23);}
+	| DEFAULT { fprintf(yyout, "default "); } ':' { fprintf(yyout, ": "); } statement {debug_mode(24);}
 	;
 
 compound_statement
@@ -730,8 +720,8 @@ compound_statement
 	;
 
 compound_statement_cierre
-	: '}' { fprintf(yyout, " }\n"); if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*27*"); }}
-	|  block_item_list '}' { fprintf(yyout, "}\n"); if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*28*"); }}
+	: '}' { fprintf(yyout, " }\n"); debug_mode(25);}
+	|  block_item_list '}' { fprintf(yyout, "}\n"); debug_mode(26);}
 	//Detección de error
 	| error {printf("Símbolo faltante }\n");}
 	| block_item_list error {printf("Símbolo faltante }\n");}
@@ -812,10 +802,9 @@ external_declaration
 	;
 //Declaración de una función
 function_definition
-	: declaration_specifiers declarator declaration_list compound_statement {if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*30*"); }}
+	: declaration_specifiers declarator declaration_list compound_statement {debug_mode(27);}
 	| declaration_specifiers declarator compound_statement 	{ 
-																if(bandera_estado.debug_mode == TRUE) 
-																	fprintf(yyout, "*31*");
+																debug_mode(28);
 																
 																//Symbol Table
 																s=getsym($2);
@@ -867,4 +856,11 @@ int main(int argc,char **argv)
 void yyerror(const char *s)
 {
 	printf("*** %s en la linea: %d    %s\n", s, yylineno,yytext);
+}
+
+/*Imprime un índice en las reglas semánticas para facilitar el debugueo */
+void debug_mode(int indice)
+{
+	if(bandera_estado.debug_mode == TRUE)
+		fprintf(yyout, "*%d*", indice);
 }

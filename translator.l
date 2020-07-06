@@ -16,6 +16,7 @@ WS  [ \t\v\n\f]
 %option yylineno
 %{
 #include <stdio.h>
+//Definir todos los tokens como tipo char*
 #ifndef YYSTYPE
     # define YYSTYPE char*
 #endif

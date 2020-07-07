@@ -417,7 +417,7 @@ init_declarator
 						}
 						else
 						{
-							printf("Variable ya declarada!\n");
+							printf("Variable %s ya declarada (línea %d)\n", s->name, yylineno);
 							yyerrok;	
 						}
 					}
@@ -636,7 +636,7 @@ parameter_declaration
 										}
 										else
 										{
-											printf("Variable ya declarada!\n");
+											printf("Variable %s ya declarada (línea %d)\n", s->name, yylineno);
 											yyerrok;
 										}
 									}	
@@ -882,7 +882,7 @@ int main(int argc,char **argv)
 
 void yyerror(const char *s)
 {
-	printf("*** %s en la linea: %d    %s\n", s, yylineno,yytext);
+	printf("%s en la linea: %d    %s\n", s, yylineno,yytext);
 }
 
 /*

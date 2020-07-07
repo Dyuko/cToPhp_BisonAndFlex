@@ -46,3 +46,4 @@ struct bandera_estado
 symrec * putsym(char *sym_name,	char* sym_type, int b_function);
 symrec * getsym(char *sym_name_name);
 void print_sym_table();
+void comprobacion_de_tipo(char* operando_1, char* operando_2, char operacion);

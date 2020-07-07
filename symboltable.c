@@ -24,7 +24,7 @@ symrec * getsym(char *sym_name)
 	for(ptr = sym_table; ptr != (symrec*)0; ptr = (symrec *)ptr->next)
 		if(strcmp(ptr->name, sym_name) == 0)
 		{
-			printf("simbolo: %s\n", ptr->name);
+			//printf("simbolo: %s\n", ptr->name);
 			return ptr;
 		}
 	return 0;

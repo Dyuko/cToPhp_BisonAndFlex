@@ -221,9 +221,9 @@ cast_expression
 
 multiplicative_expression
 	: cast_expression
-	| multiplicative_expression '*' { fprintf(yyout, " * "); } cast_expression {printf(":::%s*%s\n",$1,$4);}
-	| multiplicative_expression '/' { fprintf(yyout, " / "); } cast_expression
-	| multiplicative_expression '%' { fprintf(yyout, " %% "); } cast_expression
+	| multiplicative_expression '*' { fprintf(yyout, " * "); } cast_expression {comprobacion_de_tipo($1,$4,'*');}
+	| multiplicative_expression '/' { fprintf(yyout, " / "); } cast_expression {comprobacion_de_tipo($1,$4,'/');}
+	| multiplicative_expression '%' { fprintf(yyout, " %% "); } cast_expression {comprobacion_de_tipo($1,$4,'%');}
 	//Detección de error
 	| multiplicative_expression '*' error	{
 												printf("Símbolo cast_expression faltante para operación '*' [multiplicative_expression]\n");
@@ -244,8 +244,8 @@ multiplicative_expression
 
 additive_expression
 	: multiplicative_expression
-	| additive_expression '+' { fprintf(yyout, " + "); } multiplicative_expression
-	| additive_expression '-' { fprintf(yyout, " - "); } multiplicative_expression
+	| additive_expression '+' { fprintf(yyout, " + "); } multiplicative_expression {comprobacion_de_tipo($1,$4,'+');}
+	| additive_expression '-' { fprintf(yyout, " - "); } multiplicative_expression {comprobacion_de_tipo($1,$4,'-');}
 	//Detección de error
 	| additive_expression '+' error	{
 										printf("Símbolo multiplicative_expression faltante para operación '+' [additive_expression]\n");
@@ -896,9 +896,34 @@ void debug_mode(int indice)
 }
 
 /*
-* Realiza la comprobación de tipos, imprime un error en caso de encontrar inconcordancia en los tipos
+* Realiza una comprobación de tipo reducida.
+* Verifica que las operaciones de suma, resta, mod, multiplicación y división se realicen 
+* solamente con operandos de tipo float, double o int.
 */
-void comprobacion_de_tipo(char* operando_1, char* operando_2, char* operacion)
+void comprobacion_de_tipo(char* operando_1, char* operando_2, char operacion)
 {
+	//Trae los datos de los operandos de la tabla de símbolos
+	symrec* operando_1_symrec = getsym(operando_1);
+	symrec* operando_2_symrec = getsym(operando_2);
+	if(operando_1_symrec == NULL || operando_2_symrec == NULL)	//No deberían de poder ser NULL, pero para asegurar 
+		return;
+	//Obtiene el tipo de dato de los operandos
+	char* tipo_operando_1 = operando_1_symrec->type;
+	char* tipo_operando_2 = operando_2_symrec->type;
+	//printf("%s-%s--%s-%s\n",operando_1,tipo_operando_1,operando_2,tipo_operando_2);
 
+	//Si la operación es de suma, resta, multiplicación, división o mod, verifica que los operandos sean float, double o int.
+	if(operacion == '+' || operacion == '-' || operacion == '*' || operacion == '/' || operacion == '%')
+	{
+		//Si no es ninguno de los tipos de datos permitidos
+		if(strcmp(tipo_operando_1,"float")!=0 && strcmp(tipo_operando_1,"double")!=0 && strcmp(tipo_operando_1,"int")!=0)
+		{
+			printf("Comprobación de tipos: El operando %s en la operación %c posee un tipo (%s) no permitido, (línea %d)\n", operando_1, operacion, tipo_operando_1, yylineno);
+		}
+				//Si no es ninguno de los tipos de datos permitidos
+		if(strcmp(tipo_operando_2,"float")!=0 && strcmp(tipo_operando_2,"double")!=0 && strcmp(tipo_operando_2,"int")!=0)
+		{
+			printf("Comprobación de tipos: El operando %s en la operación %c posee un tipo (%s) no permitido, (línea %d)\n", operando_2, operacion, tipo_operando_2, yylineno);
+		}
+	}
 }

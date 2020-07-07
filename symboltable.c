@@ -34,7 +34,7 @@ symrec * getsym(char *sym_name)
 */
 void print_sym_table()
 {
-	printf("\t\t\tTabla de símbolos\n");
+	printf("\n\t\t\tTabla de símbolos\n");
 	printf("Identificador\t\tTipo de valor\t\tTipo de símbolo\n");
     symrec *ptr;
     for (ptr = sym_table; ptr != (symrec *)0; ptr = (symrec *)ptr->next)

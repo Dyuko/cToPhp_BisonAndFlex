@@ -359,7 +359,6 @@ declaration
 									}
 	| declaration_specifiers init_declarator_list ';'	
 				{
-					//fprintf(yyout, "$%s", $2);	//Es para declaraciones tipo int global;
 					if(bandera_estado.parche_imprimir_array == TRUE)
 					{
 						fprintf(yyout, "=array( ");
@@ -417,7 +416,7 @@ init_declarator
 						}
 						else
 						{
-							printf("Variable %s ya declarada (línea %d)\n", s->name, yylineno);
+							printf("%s ya declarada (línea %d)\n", s->name, yylineno);
 							yyerrok;	
 						}
 					}
@@ -841,7 +840,7 @@ function_definition
 																}
 																else
 																{
-																	printf("Funcion ya declarada!");
+																	printf("Función %s ya declarada (línea %d)\n", s->name, yylineno);
 																	yyerrok;
 																}
 															}

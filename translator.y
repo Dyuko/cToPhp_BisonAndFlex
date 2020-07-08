@@ -784,13 +784,14 @@ expression_statement
 	;
 
 selection_statement
-	: IF '(' { fprintf(yyout, "if ( "); } expression statement if_resto
+	: IF '(' { fprintf(yyout, "if ( "); } expression ')' {fprintf(yyout, ")");} statement if_resto
 	| SWITCH '(' { fprintf(yyout, "switch ( "); } switch_resto
 	;
 
 if_resto
 	: ')' { fprintf(yyout, " )"); } ELSE { fprintf(yyout, "else"); } statement
 	| ')' { fprintf(yyout, " )"); }
+	| 
 	| error	{printf("En el if, Símbolo faltante \")\"\n");}
 	;
 

@@ -1,13 +1,15 @@
 <?php
 function main (){
-$i;
 $n=100;
-$t1=0;
-$t2=1;
-$nextTerm;
-{
-$nextTerm = $t1 + $t2$t1 = $t2;
-$t2 = $nextTerm;
+$i;
+$fact=1;
+if ( $n < 0)
+return 0{
+for( $i = 1;
+$i <= $n;
+++$i ){
+$fact *= $i;
+}
 return 0;
 }
 main();

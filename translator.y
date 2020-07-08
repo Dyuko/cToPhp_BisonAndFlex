@@ -789,7 +789,7 @@ if_resto
 	: ')' { fprintf(yyout, " )"); } ELSE { fprintf(yyout, "else"); } statement
 	| ')' { fprintf(yyout, " )"); }
 	| 
-	| error	{printf("En el if, Símbolo faltante \")\"\n");}
+	| error	{printf("Símbolo faltante \n");}
 	;
 
 switch_resto

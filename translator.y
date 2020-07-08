@@ -805,10 +805,10 @@ iteration_statement
 	;
 
 for_resto
-	: expression_statement expression_statement ')' { fprintf(yyout, " )"); } statement
-	| expression_statement expression_statement expression ')' { fprintf(yyout, " )"); } statement
-	| declaration expression_statement ')' { fprintf(yyout, " )"); } statement
-	| declaration expression_statement expression ')' { fprintf(yyout, " )"); } statement
+	: expression_statement expression_statement ')' { fprintf(yyout, " )\n"); } statement
+	| expression_statement expression_statement expression ')' { fprintf(yyout, " )\n"); } statement
+	| declaration expression_statement ')' { fprintf(yyout, " )\n"); } statement
+	| declaration expression_statement expression ')' { fprintf(yyout, " )\n"); } statement
 	//Detección de error
 	| error  {printf("Error cerca del for\n");}
 	;

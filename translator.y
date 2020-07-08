@@ -801,6 +801,7 @@ iteration_statement
 	: WHILE { fprintf(yyout, "while"); } '(' { fprintf(yyout, "("); } expression ')' { fprintf(yyout, ")"); } statement
 	| DO { fprintf(yyout, "do"); } statement WHILE '(' { fprintf(yyout, "while("); } expression ')' ';' { fprintf(yyout, ");"); }
 	| FOR { fprintf(yyout, "for"); } '(' { fprintf(yyout, "( "); } for_resto
+	| FOR error ')'
 	;
 
 for_resto

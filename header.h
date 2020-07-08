@@ -33,7 +33,6 @@ extern symrec *sym_table;
 */
 struct bandera_estado
 {
-	int parche_imprimir_array;
 	int ignorar_dimension_vector;
 	int ignorar_vector_multidimensional;
 	int cerrar_parentesis_array;

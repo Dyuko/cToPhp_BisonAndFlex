@@ -16,7 +16,7 @@
 	void debug_mode(int indice);
 
 	// Declaro e inicializo explícitamente 
-	struct bandera_estado bandera_estado = {FALSE, FALSE, FALSE, FALSE, FALSE, FALSETRUE};	
+	struct bandera_estado bandera_estado = { FALSE, FALSE, FALSE, FALSE, FALSE};	
 
 	//Symbol Table
 	symrec *sym_table = (symrec * )0;
@@ -366,11 +366,6 @@ declaration
 									}
 	| declaration_specifiers init_declarator_list ';'	
 				{
-					if(bandera_estado.parche_imprimir_array == TRUE)
-					{
-						fprintf(yyout, "=array( ");
-						bandera_estado.parche_imprimir_array = FALSE; 
-					}
 					if(bandera_estado.ignorar_vector_multidimensional == TRUE
 					&& bandera_estado.cerrar_parentesis_array == TRUE)
 					{
@@ -590,7 +585,7 @@ direct_declarator
 	| direct_declarator '[' { 
 								bandera_estado.ignorar_dimension_vector = TRUE; 
 								if (bandera_estado.ignorar_vector_multidimensional == FALSE) 
-									bandera_estado.parche_imprimir_array = TRUE; 
+									fprintf(yyout, "=array( ");
 								bandera_estado.ignorar_vector_multidimensional = TRUE; 
 							}
 	assignment_expression ']' 	{ 

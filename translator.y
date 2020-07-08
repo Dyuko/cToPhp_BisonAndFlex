@@ -814,8 +814,8 @@ return_resto
 	;
 
 translation_unit	
-	: external_declaration
-	| translation_unit external_declaration
+	: external_declaration					{debug_mode(404);}
+	| translation_unit external_declaration {debug_mode(405);}
 	;
 //declaración externa
 external_declaration	
@@ -872,7 +872,7 @@ int main(int argc,char **argv)
 	}
 	fprintf(yyout, "<?php\n");
 	yyparse();
-	fprintf(yyout, "main()\n");
+	fprintf(yyout, "main();\n");
 	fprintf(yyout, "?>\n");
 	print_sym_table();
 	fclose(yyin);		//Cerrar archivo de entrada
@@ -917,12 +917,12 @@ void comprobacion_de_tipo(char* operando_1, char* operando_2, char operacion)
 		//Si no es ninguno de los tipos de datos permitidos
 		if(strcmp(tipo_operando_1,"float")!=0 && strcmp(tipo_operando_1,"double")!=0 && strcmp(tipo_operando_1,"int")!=0)
 		{
-			printf("Comprobación de tipos: El operando %s en la operación %c posee un tipo (%s) no permitido, (línea %d)\n", operando_1, operacion, tipo_operando_1, yylineno);
+			printf("El operando %s en la operación %c posee un tipo (%s) no permitido, (línea %d)\n", operando_1, operacion, tipo_operando_1, yylineno);
 		}
 				//Si no es ninguno de los tipos de datos permitidos
 		if(strcmp(tipo_operando_2,"float")!=0 && strcmp(tipo_operando_2,"double")!=0 && strcmp(tipo_operando_2,"int")!=0)
 		{
-			printf("Comprobación de tipos: El operando %s en la operación %c posee un tipo (%s) no permitido, (línea %d)\n", operando_2, operacion, tipo_operando_2, yylineno);
+			printf("El operando %s en la operación %c posee un tipo (%s) no permitido, (línea %d)\n", operando_2, operacion, tipo_operando_2, yylineno);
 		}
 	}
 }

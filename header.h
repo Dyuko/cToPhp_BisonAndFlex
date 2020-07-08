@@ -12,7 +12,6 @@ struct symrec
 {
 	char *name;			/* name of symbol */
 	char *type;			/* type of symbol */
-	double value;				/* value of a VAR */
 	int function;
 	struct symrec *next;		/* link field */
 };

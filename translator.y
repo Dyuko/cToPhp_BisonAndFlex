@@ -784,7 +784,7 @@ expression_statement
 	;
 
 selection_statement
-	: IF '(' { fprintf(yyout, "if ( "); } expression ')' {fprintf(yyout, ")");} statement if_resto
+	: IF '(' { fprintf(yyout, "if ( "); } expression ')' {fprintf(yyout, ")\n");} statement if_resto
 	| SWITCH '(' { fprintf(yyout, "switch ( "); } switch_resto
 	;
 

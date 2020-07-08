@@ -16,7 +16,7 @@
 	void debug_mode(int indice);
 
 	// Declaro e inicializo explícitamente 
-	struct bandera_estado bandera_estado = {FALSE, FALSE, FALSE, FALSE, FALSE, FALSE};	
+	struct bandera_estado bandera_estado = {FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE};	
 
 	//Symbol Table
 	symrec *sym_table = (symrec * )0;
@@ -48,7 +48,17 @@ primary_expression
 					} 
 					else
 					{ 
-						fprintf(yyout, "$%s", $1);
+						symrec* s = getsym($1);
+						//Si es una constante no debo imprimir el $
+						if(bandera_estado.ignorar_dolar_const == TRUE || (s!=NULL && strcmp(s->type,"const")==0))
+						{
+							fprintf(yyout, "%s", $1);
+							bandera_estado.ignorar_dolar_const = FALSE;
+						}
+						else	//Imprime el identificador con $
+						{
+							fprintf(yyout, "$%s", $1);
+						}
 					} 
 					debug_mode(1);
 				} 
@@ -533,7 +543,7 @@ atomic_type_specifier
 	;
 
 type_qualifier
-	: CONST { fprintf(yyout, "const "); }
+	: CONST { fprintf(yyout, "const "); bandera_estado.ignorar_dolar_const = TRUE;}
 	| RESTRICT { fprintf(yyout, "restrict "); } 
 	| VOLATILE { fprintf(yyout, "volatile "); }
 	| ATOMIC { fprintf(yyout, "atomic "); }
@@ -560,7 +570,12 @@ direct_declarator
 	: IDENTIFIER	{ 
 						$$ = $1;	//Atributo sintetizado necesario
 						debug_mode(17);
-						if(bandera_estado.funcion_declarada == FALSE)
+						if(bandera_estado.ignorar_dolar_const == TRUE)	//Si se detecto la palabra reservada const ignoro el $
+						{
+							fprintf(yyout, "%s", $1);
+							bandera_estado.ignorar_dolar_const = FALSE;
+						}
+						else if(bandera_estado.funcion_declarada == FALSE)
 						{
 							fprintf(yyout, "$%s", $1);
 						}
@@ -872,7 +887,8 @@ int main(int argc,char **argv)
 	}
 	fprintf(yyout, "<?php\n");
 	yyparse();
-	fprintf(yyout, "main();\n");
+	if(getsym("main")!=NULL)	//Si en el código está la función main(), entonces debo llamarla en php
+		fprintf(yyout, "main();\n");
 	fprintf(yyout, "?>\n");
 	print_sym_table();
 	fclose(yyin);		//Cerrar archivo de entrada

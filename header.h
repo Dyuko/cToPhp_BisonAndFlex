@@ -29,6 +29,7 @@ extern symrec *sym_table;
 * ignorar_vector_multidimensional: Si se detecta un vector multidimensional en c, debo evitar imprimir array() array() en php
 * variable_global_detectada: Si se ha detectado una variable global declarada en c
 * cerrar_parentesis_array: Bandera utilizada para imprimir correctamente al declarar un array
+* ignorar_dolar_const: no imprimir $ al detectar la palabra reservada const
 * debug_mode: Utilizado para debuggear, habilita la impresión de identificadores en las reglas semánticas 
 */
 struct bandera_estado
@@ -38,6 +39,7 @@ struct bandera_estado
 	int ignorar_dimension_vector;
 	int ignorar_vector_multidimensional;
 	int cerrar_parentesis_array;
+	int ignorar_dolar_const;
 	int debug_mode;
 };
 

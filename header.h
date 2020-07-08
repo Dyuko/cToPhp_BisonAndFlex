@@ -4,6 +4,7 @@
 #define T_VARIABLE 0
 #define T_FUNCTION 1
 #define T_CONSTANT 2
+#define T_ESTATICO 3
 /* Function type. */
 typedef double (func_t) (double);
 

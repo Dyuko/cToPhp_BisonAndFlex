@@ -50,6 +50,9 @@ void print_sym_table()
 			case T_CONSTANT: 
 						printf("\t\t\tConstante\n");
 						break;
+			case T_ESTATICO:
+						printf("\t\t\tValor Estático\n");
+						break;
 		}
 	}	
 }

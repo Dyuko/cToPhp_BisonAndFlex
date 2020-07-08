@@ -96,7 +96,7 @@ constant
 								s=getsym($1);
 								if(s==(symrec *) 0)
 								{
-									s=putsym($1, "int", T_CONSTANT);
+									s=putsym($1, "int", T_ESTATICO);
 								}	
 							}		
 	| F_CONSTANT 			{
@@ -105,7 +105,7 @@ constant
 								s=getsym($1);
 								if(s==(symrec *) 0)
 								{
-									s=putsym($1, "float", T_CONSTANT);
+									s=putsym($1, "float", T_ESTATICO);
 								}
 							}	
 	| ENUMERATION_CONSTANT 	{
@@ -114,7 +114,7 @@ constant
 								s=getsym($1);
 								if(s==(symrec *) 0)
 								{
-									s=putsym($1, "ENUMERATION_CONSTANT", T_CONSTANT);
+									s=putsym($1, "ENUMERATION_CONSTANT", T_ESTATICO);
 								}
 							}	
 	;

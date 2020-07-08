@@ -24,7 +24,6 @@ extern symrec *sym_table;
 /* 
 * Una estructura que representa un conjunto de banderas de estados
 * parche_imprimir_array: Bandera utilizada para corregir orden de impresión incorrecta al declarar un array con elementos
-* funcion_declarada: Si se declara una función en c, en php debo imprimir function 
 * ignorar_dimension_vector: En c se declara la dimensión del vector, en php lo ignoro
 * ignorar_vector_multidimensional: Si se detecta un vector multidimensional en c, debo evitar imprimir array() array() en php
 * variable_global_detectada: Si se ha detectado una variable global declarada en c
@@ -35,7 +34,6 @@ extern symrec *sym_table;
 struct bandera_estado
 {
 	int parche_imprimir_array;
-	int funcion_declarada;
 	int ignorar_dimension_vector;
 	int ignorar_vector_multidimensional;
 	int cerrar_parentesis_array;

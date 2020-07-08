@@ -16,7 +16,7 @@
 	void debug_mode(int indice);
 
 	// Declaro e inicializo explícitamente 
-	struct bandera_estado bandera_estado = {FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE};	
+	struct bandera_estado bandera_estado = {FALSE, FALSE, FALSE, FALSE, FALSE, FALSETRUE};	
 
 	//Symbol Table
 	symrec *sym_table = (symrec * )0;
@@ -41,25 +41,22 @@
 primary_expression
 	: IDENTIFIER{
 					$$ = $1;
-		 			if (bandera_estado.funcion_declarada == TRUE)	//Si es una función imprimo "function"
-					{ 
-						fprintf(yyout, "function %s", $1); 
-						bandera_estado.funcion_declarada = FALSE;
-					} 
-					else
-					{ 
-						symrec* s = getsym($1);
-						//Si es una constante no debo imprimir el $
-						if(bandera_estado.ignorar_dolar_const == TRUE || (s!=NULL && strcmp(s->type,"const")==0))
-						{
-							fprintf(yyout, "%s", $1);
-							bandera_estado.ignorar_dolar_const = FALSE;
-						}
-						else	//Imprime el identificador con $
-						{
-							fprintf(yyout, "$%s", $1);
-						}
-					} 
+					symrec* s = getsym($1);
+					//Si es una constante no debo imprimir el $
+					if(bandera_estado.ignorar_dolar_const == TRUE || (s!=NULL && strcmp(s->type,"const")==0))
+					{
+						fprintf(yyout, "%s", $1);
+						bandera_estado.ignorar_dolar_const = FALSE;
+					}
+					//Si es la llamada a una función no debo imprimir el $
+					else if((s!=NULL && s->function==T_FUNCTION))
+					{
+						fprintf(yyout, "%s", $1);
+					}
+					else	//Imprime el identificador con $
+					{
+						fprintf(yyout, "$%s", $1);
+					}
 					debug_mode(1);
 				} 
 	| constant	{
@@ -575,16 +572,11 @@ direct_declarator
 							fprintf(yyout, "%s", $1);
 							bandera_estado.ignorar_dolar_const = FALSE;
 						}
-						else if(bandera_estado.funcion_declarada == FALSE)
+						else 
 						{
 							fprintf(yyout, "$%s", $1);
 						}
 					}
-
-    | IDENTIFIER '(' ')'{
-                            fprintf(yyout, "function %s ()", $1);
-                            if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*22*"); }
-                        }
 	| '(' declarator ')'
 	| direct_declarator '[' { if (bandera_estado.ignorar_vector_multidimensional == FALSE) fprintf(yyout, "=array( "); bandera_estado.ignorar_vector_multidimensional = TRUE; }
 	 ']' { bandera_estado.cerrar_parentesis_array =TRUE; debug_mode(18);}
@@ -605,12 +597,22 @@ direct_declarator
 									bandera_estado.cerrar_parentesis_array = TRUE; 
 									debug_mode(19);
 								}
-	| direct_declarator '(' { fprintf(yyout, "( "); } parameter_type_list ')' { fprintf(yyout, " )"); debug_mode(20);}
+	| direct_declarator '(' { 
+								fseek( yyout, (-1*(strlen($1)+1)), SEEK_CUR );	//Corrige la impresión si es una función
+								fprintf(yyout, "function %s (", $1);
+							} 
+	parameter_type_list ')' { fprintf(yyout, " )"); debug_mode(20);}
+	
 	| direct_declarator '(' ')' {
+									fseek( yyout, (-1*(strlen($1)+1)), SEEK_CUR );	//Corrige la impresión si es una función
 									fprintf(yyout, "function %s ()", $1);
 									if(bandera_estado.debug_mode == TRUE) { fprintf(yyout, "*22*"); }
 								}
-	| direct_declarator '(' { fprintf(yyout, "( "); } identifier_list ')' { fprintf(yyout, " )"); debug_mode(21);}
+	| direct_declarator '(' { 
+								fseek( yyout, (-1*(strlen($1)+1)), SEEK_CUR );	//Corrige la impresión si es una función
+								fprintf(yyout, "function %s (", $1);
+							} 
+	identifier_list ')' { fprintf(yyout, " )"); debug_mode(21);}
 	//Detección de error
 	| direct_declarator '[' error {printf("Símbolo faltante \"]\"\n");}
 	| direct_declarator '(' error {printf("Símbolo faltante \")\"\n");}
@@ -836,9 +838,7 @@ translation_unit
 //declaración externa
 external_declaration	
 	//declaración de función
-	: function_definition 	{	bandera_estado.funcion_declarada = TRUE;
-								debug_mode(41);
-							}
+	: function_definition 	{ debug_mode(41);}
 	//declaración global
 	| declaration
 	;
